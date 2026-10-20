@@ -1,0 +1,2731 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>InterviewAI – Your Smart Interview Coach</title>
+  <style>
+    :root {
+      --primary: #6c63ff;
+      --primary-dark: #574fd6;
+      --secondary: #00d4aa;
+      --accent: #ff6584;
+      --bg: #0d0d1a;
+      --bg2: #13132b;
+      --bg3: #1a1a35;
+      --card: #1e1e40;
+      --card2: #252550;
+      --text: #e8e8f0;
+      --text-muted: #8888aa;
+      --border: #2a2a5a;
+      --success: #00d4aa;
+      --warning: #ffb347;
+      --danger: #ff6584;
+      --gold: #ffd700;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+    }
+    /* SCROLLBAR */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg2); }
+    ::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 3px; }
+
+    /* ── SIDEBAR ────────────────────────────────── */
+    .sidebar {
+      position: fixed; left: 0; top: 0; bottom: 0;
+      width: 240px; background: var(--bg2);
+      border-right: 1px solid var(--border);
+      display: flex; flex-direction: column;
+      z-index: 100; transition: transform .3s;
+    }
+    .sidebar-logo {
+      padding: 22px 20px;
+      display: flex; align-items: center; gap: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    .logo-icon {
+      width: 38px; height: 38px; border-radius: 10px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+    .logo-text { font-size: 17px; font-weight: 700; }
+    .logo-text span { color: var(--secondary); }
+    .sidebar-nav { flex: 1; padding: 14px 10px; overflow-y: auto; }
+    .nav-section { margin-bottom: 6px; }
+    .nav-label {
+      font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px;
+      color: var(--text-muted); padding: 8px 12px 4px;
+    }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px; border-radius: 10px;
+      cursor: pointer; transition: all .2s; margin-bottom: 2px;
+      font-size: 14px; color: var(--text-muted);
+      border: none; background: none; width: 100%; text-align: left;
+    }
+    .nav-item:hover { background: var(--bg3); color: var(--text); }
+    .nav-item.active { background: linear-gradient(135deg,rgba(108,99,255,.25),rgba(0,212,170,.15)); color: var(--primary); font-weight: 600; border: 1px solid rgba(108,99,255,.3); }
+    .nav-item .nav-icon { width: 20px; text-align: center; font-size: 16px; }
+    .sidebar-footer {
+      padding: 16px;
+      border-top: 1px solid var(--border);
+    }
+    .user-badge {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px; border-radius: 10px;
+      background: var(--bg3); cursor: pointer;
+    }
+    .user-avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 14px;
+    }
+    .user-name { font-size: 13px; font-weight: 600; }
+    .user-level { font-size: 11px; color: var(--secondary); }
+
+    /* ── MAIN ────────────────────────────────────── */
+    .main {
+      margin-left: 240px;
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+    }
+    .topbar {
+      height: 64px;
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center;
+      padding: 0 28px; gap: 16px;
+      position: sticky; top: 0; z-index: 50;
+    }
+    .topbar-title { font-size: 18px; font-weight: 700; flex: 1; }
+    .topbar-title span { color: var(--primary); }
+    .topbar-badges { display: flex; gap: 10px; align-items: center; }
+    .badge {
+      display: flex; align-items: center; gap: 6px;
+      padding: 6px 14px; border-radius: 20px;
+      font-size: 13px; font-weight: 600;
+    }
+    .badge-xp { background: rgba(255,215,0,.12); color: var(--gold); border: 1px solid rgba(255,215,0,.3); }
+    .badge-streak { background: rgba(255,101,132,.12); color: var(--accent); border: 1px solid rgba(255,101,132,.3); }
+    .content { flex: 1; padding: 28px; }
+
+    /* ── PAGES ───────────────────────────────────── */
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* ── HERO DASHBOARD ─────────────────────────── */
+    .hero-section {
+      background: linear-gradient(135deg, var(--bg3), var(--card));
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 36px 40px;
+      margin-bottom: 28px;
+      position: relative; overflow: hidden;
+    }
+    .hero-section::before {
+      content: '';
+      position: absolute; right: -60px; top: -60px;
+      width: 300px; height: 300px;
+      background: radial-gradient(circle, rgba(108,99,255,.15) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-section::after {
+      content: '';
+      position: absolute; right: 120px; bottom: -80px;
+      width: 200px; height: 200px;
+      background: radial-gradient(circle, rgba(0,212,170,.1) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-greeting { font-size: 13px; color: var(--secondary); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+    .hero-title { font-size: 30px; font-weight: 800; margin-bottom: 8px; }
+    .hero-title span { background: linear-gradient(135deg, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .hero-subtitle { color: var(--text-muted); margin-bottom: 24px; font-size: 15px; }
+    .hero-cta { display: flex; gap: 12px; flex-wrap: wrap; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 12px 24px; border-radius: 12px;
+      border: none; cursor: pointer; font-size: 14px; font-weight: 600;
+      transition: all .25s; text-decoration: none;
+    }
+    .btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(108,99,255,.4); }
+    .btn-outline { background: transparent; color: var(--primary); border: 2px solid var(--primary); }
+    .btn-outline:hover { background: rgba(108,99,255,.12); transform: translateY(-2px); }
+    .btn-success { background: linear-gradient(135deg, var(--secondary), #00b894); color: #0d2818; }
+    .btn-success:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,212,170,.4); }
+    .btn-danger { background: linear-gradient(135deg, var(--danger), #e84393); color: white; }
+    .btn-sm { padding: 8px 16px; font-size: 13px; }
+    .btn-lg { padding: 14px 32px; font-size: 16px; }
+
+    /* STAT GRID */
+    .stat-grid {
+      display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 28px;
+    }
+    .stat-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 16px; padding: 20px;
+      position: relative; overflow: hidden;
+    }
+    .stat-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    }
+    .stat-card.purple::before { background: var(--primary); }
+    .stat-card.green::before { background: var(--secondary); }
+    .stat-card.orange::before { background: var(--warning); }
+    .stat-card.red::before { background: var(--accent); }
+    .stat-label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+    .stat-value { font-size: 28px; font-weight: 800; }
+    .stat-value.purple { color: var(--primary); }
+    .stat-value.green { color: var(--secondary); }
+    .stat-value.orange { color: var(--warning); }
+    .stat-value.red { color: var(--accent); }
+    .stat-sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+    .stat-icon { position: absolute; right: 16px; top: 16px; font-size: 24px; opacity: .4; }
+
+    /* SECTION HEADERS */
+    .section-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .section-title { font-size: 18px; font-weight: 700; }
+    .section-title span { color: var(--primary); }
+
+    /* GRID 2COL */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 28px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 28px; }
+
+    /* CARD */
+    .card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 16px; padding: 22px;
+    }
+
+    /* QUICK ACTIONS */
+    .quick-actions { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; margin-bottom: 28px; }
+    .quick-btn {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 16px; padding: 20px;
+      cursor: pointer; transition: all .2s; text-align: center;
+      display: flex; flex-direction: column; align-items: center; gap: 10px;
+    }
+    .quick-btn:hover { border-color: var(--primary); background: var(--card2); transform: translateY(-3px); }
+    .quick-btn .qb-icon { font-size: 28px; }
+    .quick-btn .qb-title { font-size: 14px; font-weight: 600; }
+    .quick-btn .qb-sub { font-size: 12px; color: var(--text-muted); }
+
+    /* RECENT INTERVIEWS */
+    .interview-list { display: flex; flex-direction: column; gap: 10px; }
+    .interview-item {
+      display: flex; align-items: center; gap: 14px;
+      padding: 14px 16px; border-radius: 12px;
+      background: var(--bg3); border: 1px solid var(--border);
+      cursor: pointer; transition: all .2s;
+    }
+    .interview-item:hover { border-color: var(--primary); }
+    .ii-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+    .ii-icon.tech { background: rgba(108,99,255,.2); }
+    .ii-icon.hr { background: rgba(0,212,170,.2); }
+    .ii-icon.behav { background: rgba(255,179,71,.2); }
+    .ii-info { flex: 1; }
+    .ii-title { font-size: 14px; font-weight: 600; }
+    .ii-meta { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+    .ii-score { text-align: right; }
+    .score-pill {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 700;
+    }
+    .score-pill.high { background: rgba(0,212,170,.15); color: var(--secondary); }
+    .score-pill.mid { background: rgba(255,179,71,.15); color: var(--warning); }
+    .score-pill.low { background: rgba(255,101,132,.15); color: var(--accent); }
+
+    /* ── INTERVIEW PAGE ──────────────────────────── */
+    .interview-header {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 16px; padding: 22px 26px;
+      margin-bottom: 20px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .progress-bar-wrap { flex: 1; max-width: 300px; }
+    .progress-label { font-size: 12px; color: var(--text-muted); margin-bottom: 6px; display: flex; justify-content: space-between; }
+    .progress-bar { height: 8px; background: var(--bg3); border-radius: 10px; overflow: hidden; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, var(--primary), var(--secondary)); border-radius: 10px; transition: width .5s; }
+    .timer-display {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 22px; font-weight: 800; color: var(--warning);
+    }
+    .timer-display.danger { color: var(--accent); animation: pulse 1s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
+
+    /* INTERVIEW CATEGORIES */
+    .category-grid {
+      display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-bottom: 28px;
+    }
+    .category-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 16px; padding: 24px; cursor: pointer;
+      transition: all .25s; text-align: center;
+    }
+    .category-card:hover { border-color: var(--primary); transform: translateY(-4px); box-shadow: 0 12px 32px rgba(108,99,255,.2); }
+    .category-card.selected { border-color: var(--primary); background: rgba(108,99,255,.12); }
+    .cat-icon { font-size: 38px; margin-bottom: 12px; }
+    .cat-title { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+    .cat-desc { font-size: 13px; color: var(--text-muted); margin-bottom: 14px; }
+    .cat-tags { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+    .tag {
+      padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;
+      background: rgba(108,99,255,.15); color: var(--primary); border: 1px solid rgba(108,99,255,.3);
+    }
+    .tag.green { background: rgba(0,212,170,.15); color: var(--secondary); border-color: rgba(0,212,170,.3); }
+    .tag.orange { background: rgba(255,179,71,.15); color: var(--warning); border-color: rgba(255,179,71,.3); }
+
+    /* DIFFICULTY PICKER */
+    .diff-picker { display: flex; gap: 12px; margin-bottom: 20px; }
+    .diff-btn {
+      flex: 1; padding: 12px; border-radius: 12px;
+      background: var(--bg3); border: 2px solid var(--border);
+      cursor: pointer; text-align: center; transition: all .2s; color: var(--text);
+    }
+    .diff-btn.active { border-color: var(--primary); background: rgba(108,99,255,.15); }
+    .diff-btn .d-label { font-size: 14px; font-weight: 700; }
+    .diff-btn .d-sub { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
+
+    /* INTERVIEW ARENA */
+    #interviewArena { display: none; }
+    .question-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 20px; padding: 28px; margin-bottom: 20px;
+      position: relative; overflow: hidden;
+    }
+    .question-card::before {
+      content: '';
+      position: absolute; left: 0; top: 0; bottom: 0; width: 4px;
+      background: linear-gradient(180deg, var(--primary), var(--secondary));
+    }
+    .q-number {
+      font-size: 12px; color: var(--text-muted); text-transform: uppercase;
+      letter-spacing: 1px; margin-bottom: 12px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .q-category-tag {
+      padding: 3px 10px; border-radius: 20px; font-size: 11px;
+      background: rgba(108,99,255,.2); color: var(--primary);
+    }
+    .question-text {
+      font-size: 18px; font-weight: 600; line-height: 1.6; margin-bottom: 10px;
+    }
+    .hint-box {
+      background: rgba(255,179,71,.08); border: 1px solid rgba(255,179,71,.2);
+      border-radius: 10px; padding: 12px 16px; margin-top: 12px;
+      font-size: 13px; color: var(--warning); display: none;
+    }
+    .hint-box.show { display: block; }
+
+    /* ANSWER AREA */
+    .answer-section { margin-bottom: 20px; }
+    .answer-tabs { display: flex; gap: 0; margin-bottom: 0; border-radius: 12px 12px 0 0; overflow: hidden; border: 1px solid var(--border); border-bottom: none; }
+    .answer-tab {
+      flex: 1; padding: 12px; text-align: center; cursor: pointer;
+      font-size: 13px; font-weight: 600; background: var(--bg3); color: var(--text-muted);
+      border: none; transition: all .2s;
+    }
+    .answer-tab.active { background: var(--card); color: var(--primary); }
+    .answer-textarea {
+      width: 100%; min-height: 160px; background: var(--card);
+      border: 1px solid var(--border); border-top: none;
+      border-radius: 0 0 12px 12px; padding: 16px; color: var(--text);
+      font-size: 14px; font-family: inherit; resize: vertical; outline: none;
+      line-height: 1.6; transition: border-color .2s;
+    }
+    .answer-textarea:focus { border-color: var(--primary); }
+
+    /* VOICE REC */
+    .voice-section {
+      background: var(--bg3); border: 1px solid var(--border);
+      border-top: none; border-radius: 0 0 12px 12px; padding: 16px;
+      display: none; align-items: center; gap: 16px;
+    }
+    .voice-section.show { display: flex; }
+    .voice-btn {
+      width: 56px; height: 56px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), #e84393);
+      border: none; cursor: pointer; font-size: 22px;
+      display: flex; align-items: center; justify-content: center;
+      transition: all .2s; flex-shrink: 0;
+    }
+    .voice-btn.recording { animation: pulse-red 1.5s infinite; }
+    @keyframes pulse-red { 0%,100%{box-shadow:0 0 0 0 rgba(255,101,132,.5)} 50%{box-shadow:0 0 0 16px rgba(255,101,132,0)} }
+    .voice-wave { flex: 1; display: flex; align-items: center; gap: 3px; height: 40px; }
+    .wave-bar {
+      width: 4px; border-radius: 2px; background: var(--primary);
+      transition: height .1s; min-height: 4px;
+    }
+
+    /* ACTION BAR */
+    .action-bar { display: flex; gap: 12px; flex-wrap: wrap; }
+
+    /* FEEDBACK PANEL */
+    .feedback-panel {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 20px; padding: 28px; margin-top: 20px; display: none;
+    }
+    .feedback-panel.show { display: block; }
+    .feedback-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+    .feedback-title { font-size: 18px; font-weight: 700; }
+    .overall-score-ring {
+      width: 90px; height: 90px; position: relative;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .ring-svg { width: 90px; height: 90px; transform: rotate(-90deg); }
+    .ring-bg { fill: none; stroke: var(--bg3); stroke-width: 8; }
+    .ring-fill { fill: none; stroke-width: 8; stroke-linecap: round; transition: stroke-dashoffset 1s ease; }
+    .ring-text {
+      position: absolute; font-size: 18px; font-weight: 800;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+
+    /* SCORE BREAKDOWN */
+    .score-breakdown { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
+    .score-item { background: var(--bg3); border-radius: 12px; padding: 14px 16px; }
+    .si-label { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; }
+    .si-bar { height: 6px; background: var(--card); border-radius: 10px; overflow: hidden; margin-bottom: 6px; }
+    .si-fill { height: 100%; border-radius: 10px; transition: width 1s; }
+    .si-val { font-size: 13px; font-weight: 700; }
+
+    /* FEEDBACK TABS */
+    .ftab-bar { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+    .ftab {
+      padding: 8px 16px; border-radius: 20px; cursor: pointer;
+      font-size: 13px; font-weight: 600; border: 2px solid transparent;
+      background: var(--bg3); color: var(--text-muted); transition: all .2s;
+    }
+    .ftab.active { border-color: var(--primary); color: var(--primary); background: rgba(108,99,255,.12); }
+    .ftab-content { display: none; }
+    .ftab-content.active { display: block; }
+
+    /* FEEDBACK POINTS */
+    .fb-point {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 12px 14px; border-radius: 10px; margin-bottom: 8px;
+    }
+    .fb-point.good { background: rgba(0,212,170,.08); border: 1px solid rgba(0,212,170,.2); }
+    .fb-point.improve { background: rgba(255,179,71,.08); border: 1px solid rgba(255,179,71,.2); }
+    .fb-point.bad { background: rgba(255,101,132,.08); border: 1px solid rgba(255,101,132,.2); }
+    .fb-icon { font-size: 18px; margin-top: 1px; }
+    .fb-text { font-size: 14px; line-height: 1.5; }
+    .fb-text strong { display: block; font-size: 13px; font-weight: 700; margin-bottom: 2px; }
+
+    /* MODEL ANSWER */
+    .model-answer-box {
+      background: rgba(108,99,255,.06); border: 1px solid rgba(108,99,255,.25);
+      border-radius: 12px; padding: 16px; margin-top: 16px;
+    }
+    .model-answer-box h4 { color: var(--primary); font-size: 13px; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
+    .model-answer-box p { font-size: 14px; line-height: 1.7; color: var(--text-muted); }
+    .model-answer-box strong { color: var(--text); }
+
+    /* ── RESULTS PAGE ────────────────────────────── */
+    .results-hero {
+      text-align: center; padding: 40px 20px 28px; position: relative;
+    }
+    .confetti { font-size: 48px; margin-bottom: 16px; display: block; }
+    .results-score-big { font-size: 72px; font-weight: 900; line-height: 1; margin-bottom: 8px; }
+    .results-score-big span { background: linear-gradient(135deg,var(--primary),var(--secondary)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .results-grade { font-size: 20px; font-weight: 700; color: var(--warning); margin-bottom: 6px; }
+    .results-sub { color: var(--text-muted); margin-bottom: 24px; }
+    .results-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-bottom: 28px; }
+    .result-metric {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 16px; padding: 22px; text-align: center;
+    }
+    .rm-value { font-size: 32px; font-weight: 800; color: var(--primary); margin-bottom: 4px; }
+    .rm-label { font-size: 13px; color: var(--text-muted); }
+
+    /* RADAR CHART */
+    .radar-container { display: flex; justify-content: center; padding: 10px; }
+    canvas#radarChart { max-width: 320px; }
+
+    /* ── TIPS PAGE ───────────────────────────────── */
+    .tips-hero {
+      background: linear-gradient(135deg,var(--bg3),var(--card));
+      border: 1px solid var(--border); border-radius: 20px;
+      padding: 32px; margin-bottom: 24px; text-align: center;
+    }
+    .tips-hero h2 { font-size: 26px; font-weight: 800; margin-bottom: 8px; }
+    .tips-hero p { color: var(--text-muted); }
+    .tips-filter { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+    .filter-btn {
+      padding: 8px 18px; border-radius: 20px; cursor: pointer;
+      font-size: 13px; font-weight: 600;
+      background: var(--bg3); border: 2px solid var(--border); color: var(--text-muted);
+      transition: all .2s;
+    }
+    .filter-btn.active { border-color: var(--primary); color: var(--primary); background: rgba(108,99,255,.12); }
+    .tips-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 16px; }
+    .tip-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 16px; padding: 20px; transition: all .25s;
+    }
+    .tip-card:hover { border-color: var(--primary); transform: translateY(-3px); }
+    .tip-card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .tip-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+    .tip-icon.tech { background: rgba(108,99,255,.2); }
+    .tip-icon.hr { background: rgba(0,212,170,.2); }
+    .tip-icon.body { background: rgba(255,179,71,.2); }
+    .tip-icon.mind { background: rgba(255,101,132,.2); }
+    .tip-title { font-size: 15px; font-weight: 700; }
+    .tip-cat { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .tip-body { font-size: 13px; color: var(--text-muted); line-height: 1.7; }
+    .tip-expand { margin-top: 12px; }
+    .tip-detail { display: none; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); }
+    .tip-detail.show { display: block; }
+    .tip-points { list-style: none; }
+    .tip-points li { padding: 4px 0; font-size: 13px; color: var(--text-muted); display: flex; gap: 8px; }
+    .tip-points li::before { content:'→'; color: var(--primary); flex-shrink:0; }
+
+    /* ── PROGRESS PAGE ───────────────────────────── */
+    .progress-overview {
+      display: grid; grid-template-columns: repeat(4,1fr);
+      gap: 16px; margin-bottom: 28px;
+    }
+    .po-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 16px; padding: 20px;
+    }
+    .po-label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+    .po-value { font-size: 26px; font-weight: 800; margin-bottom: 2px; }
+    .po-change { font-size: 12px; color: var(--secondary); }
+    .skill-bars { display: flex; flex-direction: column; gap: 14px; margin-bottom: 28px; }
+    .skill-row { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+    .skill-row-header { display: flex; justify-content: space-between; margin-bottom: 10px; }
+    .skill-row-name { font-size: 14px; font-weight: 600; }
+    .skill-row-pct { font-size: 14px; font-weight: 700; color: var(--primary); }
+    .skill-row-bar { height: 10px; background: var(--bg3); border-radius: 10px; overflow: hidden; }
+    .skill-row-fill { height: 100%; border-radius: 10px; background: linear-gradient(90deg, var(--primary), var(--secondary)); transition: width 1.5s ease; }
+    .activity-heatmap { display: grid; grid-template-columns: repeat(7,1fr); gap: 6px; }
+    .heat-cell {
+      aspect-ratio: 1; border-radius: 4px; cursor: pointer; transition: transform .15s;
+    }
+    .heat-cell:hover { transform: scale(1.3); }
+    .heat-cell.l0 { background: var(--bg3); }
+    .heat-cell.l1 { background: rgba(108,99,255,.2); }
+    .heat-cell.l2 { background: rgba(108,99,255,.45); }
+    .heat-cell.l3 { background: rgba(108,99,255,.7); }
+    .heat-cell.l4 { background: var(--primary); }
+
+    /* ── CONFIDENCE METER ────────────────────────── */
+    .confidence-section { margin: 20px 0; }
+    .conf-meter {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 16px; padding: 22px; display: flex; align-items: center; gap: 22px;
+    }
+    .conf-visual {
+      position: relative; width: 100px; height: 100px; flex-shrink: 0;
+    }
+    .conf-svg { width: 100px; height: 100px; transform: rotate(-90deg); }
+    .conf-bg { fill:none; stroke: var(--bg3); stroke-width: 10; }
+    .conf-ring { fill:none; stroke-width: 10; stroke-linecap: round; transition: stroke-dashoffset 1.5s ease; }
+    .conf-inner {
+      position: absolute; inset: 0; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+    }
+    .conf-pct { font-size: 20px; font-weight: 800; }
+    .conf-label { font-size: 10px; color: var(--text-muted); }
+    .conf-details { flex: 1; }
+    .conf-metric { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .cm-icon { font-size: 16px; }
+    .cm-label { flex: 1; font-size: 13px; color: var(--text-muted); }
+    .cm-bar { width: 120px; height: 6px; background: var(--bg3); border-radius: 10px; overflow: hidden; }
+    .cm-fill { height: 100%; border-radius: 10px; transition: width 1s; }
+
+    /* NOTIFICATION TOAST */
+    .toast {
+      position: fixed; bottom: 24px; right: 24px;
+      background: var(--card2); border: 1px solid var(--border);
+      border-radius: 14px; padding: 14px 20px;
+      display: flex; align-items: center; gap: 12px;
+      font-size: 14px; z-index: 1000;
+      transform: translateY(100px); opacity: 0;
+      transition: all .4s cubic-bezier(.34,1.56,.64,1);
+      max-width: 360px;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast-icon { font-size: 20px; }
+
+    /* MODAL */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.7);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 200; opacity: 0; pointer-events: none; transition: opacity .3s;
+    }
+    .modal-overlay.show { opacity: 1; pointer-events: all; }
+    .modal {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 24px; padding: 36px; width: 90%; max-width: 540px;
+      transform: scale(.9); transition: transform .3s; position: relative;
+    }
+    .modal-overlay.show .modal { transform: scale(1); }
+    .modal h2 { font-size: 22px; font-weight: 800; margin-bottom: 8px; }
+    .modal p { color: var(--text-muted); margin-bottom: 24px; }
+    .modal-close {
+      position: absolute; top: 16px; right: 16px;
+      width: 32px; height: 32px; border-radius: 8px;
+      background: var(--bg3); border: none; cursor: pointer;
+      color: var(--text-muted); font-size: 16px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .modal-close:hover { color: var(--text); }
+
+    /* FORM ELEMENTS */
+    .form-group { margin-bottom: 16px; }
+    .form-label { font-size: 13px; color: var(--text-muted); margin-bottom: 6px; display: block; }
+    .form-input, .form-select {
+      width: 100%; padding: 12px 16px; border-radius: 10px;
+      background: var(--bg3); border: 1px solid var(--border);
+      color: var(--text); font-size: 14px; font-family: inherit;
+      outline: none; transition: border-color .2s;
+    }
+    .form-input:focus, .form-select:focus { border-color: var(--primary); }
+    .form-select option { background: var(--bg2); }
+
+    /* CHAT INTERFACE */
+    .chat-container {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 20px; overflow: hidden;
+    }
+    .chat-header {
+      padding: 16px 20px; background: var(--bg3);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 12px;
+    }
+    .ai-avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+    .ai-status { width: 10px; height: 10px; background: var(--secondary); border-radius: 50%; position: absolute; bottom: 0; right: 0; border: 2px solid var(--bg3); }
+    .ai-info .ai-name { font-weight: 700; font-size: 15px; }
+    .ai-info .ai-desc { font-size: 12px; color: var(--text-muted); }
+    .chat-messages {
+      height: 420px; overflow-y: auto; padding: 20px;
+      display: flex; flex-direction: column; gap: 14px;
+    }
+    .message { display: flex; gap: 10px; max-width: 85%; }
+    .message.user { margin-left: auto; flex-direction: row-reverse; }
+    .msg-avatar {
+      width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center; font-size: 16px;
+    }
+    .msg-avatar.ai { background: linear-gradient(135deg,var(--primary),var(--secondary)); }
+    .msg-avatar.user { background: linear-gradient(135deg,var(--accent),#e84393); font-weight:700; font-size:14px; }
+    .msg-bubble {
+      padding: 12px 16px; border-radius: 16px; font-size: 14px; line-height: 1.6;
+    }
+    .message.ai .msg-bubble { background: var(--bg3); border: 1px solid var(--border); border-top-left-radius: 4px; }
+    .message.user .msg-bubble { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; border-top-right-radius: 4px; }
+    .msg-time { font-size: 11px; color: var(--text-muted); margin-top: 4px; padding: 0 6px; }
+    .typing-indicator { display: flex; gap: 4px; align-items: center; padding: 4px 0; }
+    .typing-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-muted); animation: bounce .8s infinite; }
+    .typing-dot:nth-child(2) { animation-delay: .15s; }
+    .typing-dot:nth-child(3) { animation-delay: .3s; }
+    @keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+    .chat-input-area {
+      padding: 16px 20px; border-top: 1px solid var(--border);
+      display: flex; gap: 10px; align-items: flex-end;
+    }
+    .chat-textarea {
+      flex: 1; padding: 12px 16px; border-radius: 12px;
+      background: var(--bg3); border: 1px solid var(--border);
+      color: var(--text); font-size: 14px; font-family: inherit;
+      outline: none; resize: none; transition: border-color .2s; max-height: 120px;
+    }
+    .chat-textarea:focus { border-color: var(--primary); }
+    .chat-send {
+      width: 44px; height: 44px; border-radius: 12px;
+      background: linear-gradient(135deg,var(--primary),var(--primary-dark));
+      border: none; cursor: pointer; color: white; font-size: 18px;
+      display: flex; align-items: center; justify-content: center;
+      transition: all .2s; flex-shrink: 0;
+    }
+    .chat-send:hover { transform: scale(1.05); }
+
+    /* LEADERBOARD */
+    .lb-item {
+      display: flex; align-items: center; gap: 14px;
+      padding: 14px 16px; border-radius: 12px;
+      background: var(--bg3); border: 1px solid var(--border); margin-bottom: 10px;
+      transition: all .2s;
+    }
+    .lb-item:hover { border-color: var(--primary); }
+    .lb-item.you { background: rgba(108,99,255,.1); border-color: rgba(108,99,255,.4); }
+    .lb-rank { width: 32px; text-align: center; font-size: 16px; font-weight: 800; }
+    .lb-rank.gold { color: var(--gold); }
+    .lb-rank.silver { color: #c0c0c0; }
+    .lb-rank.bronze { color: #cd7f32; }
+    .lb-avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 15px;
+    }
+    .lb-name { flex: 1; font-weight: 600; font-size: 14px; }
+    .lb-score { font-weight: 800; color: var(--primary); }
+    .lb-badge { font-size: 18px; }
+
+    /* ACHIEVEMENTS */
+    .achievement-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; }
+    .achievement-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 16px; padding: 18px; text-align: center;
+      transition: all .25s; cursor: pointer; position: relative;
+    }
+    .achievement-card:hover { border-color: var(--gold); transform: translateY(-3px); }
+    .achievement-card.locked { opacity: .4; filter: grayscale(1); }
+    .ach-icon { font-size: 34px; margin-bottom: 10px; }
+    .ach-name { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+    .ach-desc { font-size: 11px; color: var(--text-muted); }
+    .ach-unlock { position: absolute; top: 10px; right: 10px; font-size: 11px; background: rgba(255,215,0,.15); color: var(--gold); padding: 2px 8px; border-radius: 10px; font-weight: 700; }
+
+    /* RESPONSIVE */
+    @media (max-width: 900px) {
+      .sidebar { transform: translateX(-100%); }
+      .main { margin-left: 0; }
+      .stat-grid, .results-grid, .progress-overview { grid-template-columns: 1fr 1fr; }
+      .grid-2, .grid-3, .category-grid, .achievement-grid { grid-template-columns: 1fr; }
+      .quick-actions, .tips-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    /* ANIMATIONS */
+    .fade-in { animation: fadeIn .5s ease forwards; }
+    .slide-up { animation: slideUp .4s ease forwards; }
+    @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+    @keyframes slideUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+    .stagger > * { opacity: 0; animation: slideUp .4s ease forwards; }
+    .stagger > *:nth-child(1){animation-delay:.05s}
+    .stagger > *:nth-child(2){animation-delay:.1s}
+    .stagger > *:nth-child(3){animation-delay:.15s}
+    .stagger > *:nth-child(4){animation-delay:.2s}
+    .stagger > *:nth-child(5){animation-delay:.25s}
+    .stagger > *:nth-child(6){animation-delay:.3s}
+    .stagger > *:nth-child(7){animation-delay:.35s}
+    .stagger > *:nth-child(8){animation-delay:.4s}
+
+    /* GLOW EFFECT */
+    .glow { box-shadow: 0 0 20px rgba(108,99,255,.3); }
+
+    /* SEPARATOR */
+    .sep { height: 1px; background: var(--border); margin: 20px 0; }
+
+    /* EMPTY STATE */
+    .empty-state { text-align: center; padding: 48px 24px; color: var(--text-muted); }
+    .empty-state .es-icon { font-size: 48px; margin-bottom: 12px; }
+    .empty-state h3 { font-size: 18px; font-weight: 600; margin-bottom: 6px; color: var(--text); }
+
+    /* LEVEL PROGRESS */
+    .level-card {
+      background: linear-gradient(135deg, rgba(108,99,255,.15), rgba(0,212,170,.1));
+      border: 1px solid rgba(108,99,255,.3); border-radius: 16px; padding: 20px;
+      margin-bottom: 20px;
+    }
+    .level-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .level-badge { display: flex; align-items: center; gap: 8px; }
+    .level-num { font-size: 13px; color: var(--text-muted); }
+    .level-title { font-size: 16px; font-weight: 700; color: var(--secondary); }
+    .xp-to-next { font-size: 12px; color: var(--text-muted); }
+    .level-bar { height: 10px; background: var(--bg3); border-radius: 10px; overflow: hidden; }
+    .level-fill { height: 100%; background: linear-gradient(90deg, var(--primary), var(--secondary)); border-radius: 10px; transition: width 1s; }
+  </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon">🎯</div>
+    <div class="logo-text">Interview<span>AI</span></div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section">
+      <div class="nav-label">Main</div>
+      <button class="nav-item active" onclick="showPage('dashboard')">
+        <span class="nav-icon">🏠</span> Dashboard
+      </button>
+      <button class="nav-item" onclick="showPage('interview')">
+        <span class="nav-icon">🎤</span> Mock Interview
+      </button>
+      <button class="nav-item" onclick="showPage('chat')">
+        <span class="nav-icon">🤖</span> AI Coach Chat
+      </button>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Learn</div>
+      <button class="nav-item" onclick="showPage('tips')">
+        <span class="nav-icon">💡</span> Tips & Tricks
+      </button>
+      <button class="nav-item" onclick="showPage('progress')">
+        <span class="nav-icon">📈</span> My Progress
+      </button>
+      <button class="nav-item" onclick="showPage('leaderboard')">
+        <span class="nav-icon">🏆</span> Leaderboard
+      </button>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Account</div>
+      <button class="nav-item" onclick="showPage('achievements')">
+        <span class="nav-icon">🎖️</span> Achievements
+      </button>
+      <button class="nav-item" onclick="openSettings()">
+        <span class="nav-icon">⚙️</span> Settings
+      </button>
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-badge">
+      <div class="user-avatar">JD</div>
+      <div>
+        <div class="user-name">John Doe</div>
+        <div class="user-level">⭐ Level 12 – Rising Star</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="main">
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-title">🎯 <span>InterviewAI</span> – Smart Coach</div>
+    <div class="topbar-badges">
+      <div class="badge badge-xp">⚡ 3,450 XP</div>
+      <div class="badge badge-streak">🔥 7-day streak</div>
+      <button class="btn btn-primary btn-sm" onclick="showPage('interview')">Start Interview</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ══════════════ DASHBOARD ══════════════ -->
+    <div class="page active" id="page-dashboard">
+      <div class="hero-section fade-in">
+        <div class="hero-greeting">👋 Good day, John!</div>
+        <div class="hero-title">Ready to ace your next<br><span>dream interview?</span></div>
+        <div class="hero-subtitle">You're on a 7-day streak! Practice consistently to improve your chances by 3x.</div>
+        <div class="hero-cta">
+          <button class="btn btn-primary btn-lg" onclick="showPage('interview')">🎤 Start Mock Interview</button>
+          <button class="btn btn-outline btn-lg" onclick="showPage('chat')">🤖 Chat with AI Coach</button>
+          <button class="btn btn-outline btn-lg" onclick="showPage('tips')">💡 View Tips</button>
+        </div>
+      </div>
+
+      <div class="stat-grid stagger">
+        <div class="stat-card purple">
+          <div class="stat-icon">🎤</div>
+          <div class="stat-label">Interviews Done</div>
+          <div class="stat-value purple">24</div>
+          <div class="stat-sub">+3 this week</div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-icon">📊</div>
+          <div class="stat-label">Avg Score</div>
+          <div class="stat-value green">78%</div>
+          <div class="stat-sub">↑ +6% from last week</div>
+        </div>
+        <div class="stat-card orange">
+          <div class="stat-icon">💪</div>
+          <div class="stat-label">Confidence Level</div>
+          <div class="stat-value orange">82%</div>
+          <div class="stat-sub">↑ Improving steadily</div>
+        </div>
+        <div class="stat-card red">
+          <div class="stat-icon">🏆</div>
+          <div class="stat-label">Global Rank</div>
+          <div class="stat-value red">#142</div>
+          <div class="stat-sub">Top 8% of users</div>
+        </div>
+      </div>
+
+      <div class="section-header">
+        <div class="section-title">🚀 Quick <span>Practice</span></div>
+      </div>
+      <div class="quick-actions stagger">
+        <div class="quick-btn" onclick="startQuickInterview('technical')">
+          <div class="qb-icon">💻</div>
+          <div class="qb-title">Technical Interview</div>
+          <div class="qb-sub">DSA, System Design, Code Review</div>
+        </div>
+        <div class="quick-btn" onclick="startQuickInterview('hr')">
+          <div class="qb-icon">🤝</div>
+          <div class="qb-title">HR Interview</div>
+          <div class="qb-sub">Behavioral, Culture Fit, Situational</div>
+        </div>
+        <div class="quick-btn" onclick="startQuickInterview('mixed')">
+          <div class="qb-icon">⚡</div>
+          <div class="qb-title">Full Round</div>
+          <div class="qb-sub">Complete interview simulation</div>
+        </div>
+        <div class="quick-btn" onclick="showPage('chat')">
+          <div class="qb-icon">🤖</div>
+          <div class="qb-title">Ask AI Coach</div>
+          <div class="qb-sub">Get personalized advice</div>
+        </div>
+        <div class="quick-btn" onclick="showPage('tips')">
+          <div class="qb-icon">💡</div>
+          <div class="qb-title">Study Tips</div>
+          <div class="qb-sub">Expert strategies & guides</div>
+        </div>
+        <div class="quick-btn" onclick="showPage('progress')">
+          <div class="qb-icon">📈</div>
+          <div class="qb-title">View Progress</div>
+          <div class="qb-sub">Track your improvement</div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div>
+          <div class="section-header">
+            <div class="section-title">📋 Recent <span>Interviews</span></div>
+            <button class="btn btn-outline btn-sm" onclick="showPage('progress')">See All</button>
+          </div>
+          <div class="interview-list">
+            <div class="interview-item">
+              <div class="ii-icon tech">💻</div>
+              <div class="ii-info">
+                <div class="ii-title">Technical – Data Structures</div>
+                <div class="ii-meta">Today · 8 questions · 24 mins</div>
+              </div>
+              <div class="ii-score"><span class="score-pill high">85% ⬆</span></div>
+            </div>
+            <div class="interview-item">
+              <div class="ii-icon hr">🤝</div>
+              <div class="ii-info">
+                <div class="ii-title">HR – Behavioral Round</div>
+                <div class="ii-meta">Yesterday · 6 questions · 18 mins</div>
+              </div>
+              <div class="ii-score"><span class="score-pill high">79% ✓</span></div>
+            </div>
+            <div class="interview-item">
+              <div class="ii-icon behav">⚡</div>
+              <div class="ii-info">
+                <div class="ii-title">System Design Round</div>
+                <div class="ii-meta">2 days ago · 5 questions · 35 mins</div>
+              </div>
+              <div class="ii-score"><span class="score-pill mid">65% →</span></div>
+            </div>
+            <div class="interview-item">
+              <div class="ii-icon tech">💻</div>
+              <div class="ii-info">
+                <div class="ii-title">Technical – Algorithms</div>
+                <div class="ii-meta">3 days ago · 10 questions · 30 mins</div>
+              </div>
+              <div class="ii-score"><span class="score-pill high">91% 🌟</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="section-header">
+            <div class="section-title">🎯 Confidence <span>Meter</span></div>
+          </div>
+          <div class="conf-meter">
+            <div class="conf-visual">
+              <svg class="conf-svg" viewBox="0 0 100 100">
+                <circle class="conf-bg" cx="50" cy="50" r="44"/>
+                <circle class="conf-ring" id="confRing" cx="50" cy="50" r="44"
+                  stroke="url(#confGrad)" stroke-dasharray="276.5"
+                  stroke-dashoffset="50"/>
+                <defs>
+                  <linearGradient id="confGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="#6c63ff"/>
+                    <stop offset="100%" stop-color="#00d4aa"/>
+                  </linearGradient>
+                </defs>
+              </svg>
+              <div class="conf-inner">
+                <div class="conf-pct">82%</div>
+                <div class="conf-label">Confident</div>
+              </div>
+            </div>
+            <div class="conf-details">
+              <div class="conf-metric">
+                <span class="cm-icon">🗣️</span>
+                <span class="cm-label">Communication</span>
+                <div class="cm-bar"><div class="cm-fill" style="width:85%;background:linear-gradient(90deg,#6c63ff,#00d4aa)"></div></div>
+              </div>
+              <div class="conf-metric">
+                <span class="cm-icon">💡</span>
+                <span class="cm-label">Technical Clarity</span>
+                <div class="cm-bar"><div class="cm-fill" style="width:78%;background:linear-gradient(90deg,#6c63ff,#00d4aa)"></div></div>
+              </div>
+              <div class="conf-metric">
+                <span class="cm-icon">🧘</span>
+                <span class="cm-label">Composure</span>
+                <div class="cm-bar"><div class="cm-fill" style="width:70%;background:linear-gradient(90deg,#6c63ff,#00d4aa)"></div></div>
+              </div>
+              <div class="conf-metric">
+                <span class="cm-icon">⏱️</span>
+                <span class="cm-label">Time Management</span>
+                <div class="cm-bar"><div class="cm-fill" style="width:90%;background:linear-gradient(90deg,#6c63ff,#00d4aa)"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LEVEL CARD -->
+      <div class="level-card">
+        <div class="level-header">
+          <div class="level-badge">
+            <span style="font-size:24px">⭐</span>
+            <div>
+              <div class="level-num">LEVEL 12</div>
+              <div class="level-title">Rising Star</div>
+            </div>
+          </div>
+          <div class="xp-to-next">550 XP to Level 13 → Senior Candidate</div>
+        </div>
+        <div class="level-bar">
+          <div class="level-fill" style="width:72%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════ INTERVIEW PAGE ══════════════ -->
+    <div class="page" id="page-interview">
+      <div id="interviewSetup">
+        <div class="hero-section">
+          <div class="hero-greeting">🎤 Mock Interview</div>
+          <div class="hero-title">Choose your <span>Interview Type</span></div>
+          <div class="hero-subtitle">Select a category, set your difficulty, and start your personalized mock interview.</div>
+        </div>
+
+        <div class="section-header">
+          <div class="section-title">📂 Interview <span>Category</span></div>
+        </div>
+        <div class="category-grid stagger" id="categoryGrid">
+          <div class="category-card selected" onclick="selectCategory(this,'technical')" id="cat-technical">
+            <div class="cat-icon">💻</div>
+            <div class="cat-title">Technical</div>
+            <div class="cat-desc">Data structures, algorithms, system design & coding concepts</div>
+            <div class="cat-tags">
+              <span class="tag">DSA</span>
+              <span class="tag">OOP</span>
+              <span class="tag">System Design</span>
+              <span class="tag">DBMS</span>
+            </div>
+          </div>
+          <div class="category-card" onclick="selectCategory(this,'hr')" id="cat-hr">
+            <div class="cat-icon">🤝</div>
+            <div class="cat-title">HR & Behavioral</div>
+            <div class="cat-desc">Situational, behavioral, leadership & culture-fit questions</div>
+            <div class="cat-tags">
+              <span class="tag green">STAR Method</span>
+              <span class="tag green">Leadership</span>
+              <span class="tag green">Teamwork</span>
+            </div>
+          </div>
+          <div class="category-card" onclick="selectCategory(this,'mixed')" id="cat-mixed">
+            <div class="cat-icon">⚡</div>
+            <div class="cat-title">Full Round</div>
+            <div class="cat-desc">Complete simulation with both technical and HR questions</div>
+            <div class="cat-tags">
+              <span class="tag orange">Mixed</span>
+              <span class="tag orange">Full Sim</span>
+              <span class="tag orange">Recommended</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom:20px">
+          <div class="section-title" style="margin-bottom:16px">⚙️ Interview <span>Settings</span></div>
+          <div class="grid-2">
+            <div>
+              <div class="form-label">Difficulty Level</div>
+              <div class="diff-picker">
+                <div class="diff-btn active" onclick="setDiff(this,'easy')">
+                  <div class="d-label">🌱 Easy</div>
+                  <div class="d-sub">Entry level</div>
+                </div>
+                <div class="diff-btn" onclick="setDiff(this,'medium')">
+                  <div class="d-label">🔥 Medium</div>
+                  <div class="d-sub">Industry level</div>
+                </div>
+                <div class="diff-btn" onclick="setDiff(this,'hard')">
+                  <div class="d-label">💎 Hard</div>
+                  <div class="d-sub">FAANG level</div>
+                </div>
+              </div>
+            </div>
+            <div>
+              <div class="form-group">
+                <label class="form-label">Number of Questions</label>
+                <select class="form-select" id="numQuestions">
+                  <option value="5">5 Questions (~15 mins)</option>
+                  <option value="8" selected>8 Questions (~25 mins)</option>
+                  <option value="10">10 Questions (~35 mins)</option>
+                  <option value="15">15 Questions (~50 mins)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Target Company (Optional)</label>
+                <select class="form-select" id="targetCompany">
+                  <option value="">General / Any</option>
+                  <option value="google">Google / Alphabet</option>
+                  <option value="amazon">Amazon / AWS</option>
+                  <option value="microsoft">Microsoft</option>
+                  <option value="meta">Meta / Facebook</option>
+                  <option value="apple">Apple</option>
+                  <option value="startup">Startup / Product</option>
+                  <option value="service">IT Services (TCS, Infosys, etc.)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div style="text-align:center;margin-top:10px">
+            <button class="btn btn-primary btn-lg" onclick="startInterview()">🚀 Begin Interview Session</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- INTERVIEW ARENA -->
+      <div id="interviewArena">
+        <div class="interview-header">
+          <div>
+            <div style="font-size:12px;color:var(--text-muted);margin-bottom:4px">INTERVIEW SESSION</div>
+            <div style="font-size:16px;font-weight:700" id="arenaTitle">Technical Interview – Medium</div>
+          </div>
+          <div class="progress-bar-wrap">
+            <div class="progress-label">
+              <span>Question <span id="qCurrent">1</span> of <span id="qTotal">8</span></span>
+              <span id="qPct">12.5%</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" id="qProgress" style="width:12.5%"></div></div>
+          </div>
+          <div class="timer-display" id="timerDisplay">⏱️ <span id="timerVal">02:00</span></div>
+          <button class="btn btn-outline btn-sm" onclick="endInterview()">End Session</button>
+        </div>
+
+        <div class="question-card slide-up">
+          <div class="q-number">
+            Question <span id="qNum">1</span>
+            <span class="q-category-tag" id="qCatTag">Technical</span>
+          </div>
+          <div class="question-text" id="questionText">Loading question...</div>
+          <button class="btn btn-outline btn-sm" onclick="toggleHint()" style="margin-top:12px">💡 Show Hint</button>
+          <div class="hint-box" id="hintBox"></div>
+        </div>
+
+        <div class="answer-section">
+          <div class="answer-tabs">
+            <button class="answer-tab active" onclick="switchTab(this,'text')">📝 Text Answer</button>
+            <button class="answer-tab" onclick="switchTab(this,'voice')">🎙️ Voice Answer</button>
+            <button class="answer-tab" onclick="switchTab(this,'structured')">📋 STAR Method</button>
+          </div>
+          <textarea class="answer-textarea" id="answerText" placeholder="Type your answer here... Be specific, use examples, and structure your response clearly." rows="6"></textarea>
+          <div class="voice-section" id="voiceSection">
+            <button class="voice-btn" id="voiceBtn" onclick="toggleRecording()">🎙️</button>
+            <div class="voice-wave" id="voiceWave"></div>
+            <div style="font-size:13px;color:var(--text-muted)" id="voiceStatus">Click to start recording</div>
+          </div>
+          <div id="starSection" style="display:none;border:1px solid var(--border);border-top:none;border-radius:0 0 12px 12px;background:var(--card)">
+            <div style="padding:16px;display:grid;gap:10px">
+              <div>
+                <div class="form-label">🌟 Situation – Describe the context</div>
+                <textarea class="answer-textarea" id="starS" rows="2" placeholder="Describe the situation you were in..."></textarea>
+              </div>
+              <div>
+                <div class="form-label">🎯 Task – What was your responsibility?</div>
+                <textarea class="answer-textarea" id="starT" rows="2" placeholder="Explain what you were responsible for..."></textarea>
+              </div>
+              <div>
+                <div class="form-label">⚡ Action – What did you do?</div>
+                <textarea class="answer-textarea" id="starA" rows="2" placeholder="Describe the specific actions you took..."></textarea>
+              </div>
+              <div>
+                <div class="form-label">✅ Result – What was the outcome?</div>
+                <textarea class="answer-textarea" id="starR" rows="2" placeholder="What were the results of your actions?"></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="action-bar">
+          <button class="btn btn-primary" onclick="submitAnswer()">✅ Submit Answer &amp; Get Feedback</button>
+          <button class="btn btn-outline" onclick="skipQuestion()">⏭️ Skip Question</button>
+          <button class="btn btn-outline" onclick="toggleHint()">💡 Hint</button>
+        </div>
+
+        <!-- FEEDBACK PANEL -->
+        <div class="feedback-panel" id="feedbackPanel">
+          <div class="feedback-header">
+            <div class="feedback-title">🤖 AI Feedback</div>
+            <div class="overall-score-ring" id="scoreRing">
+              <svg class="ring-svg" viewBox="0 0 100 100">
+                <circle class="ring-bg" cx="50" cy="50" r="40"/>
+                <circle class="ring-fill" id="ringFill" cx="50" cy="50" r="40"
+                  stroke="url(#ringGrad)" stroke-dasharray="251.3"
+                  stroke-dashoffset="251.3"/>
+                <defs>
+                  <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="#6c63ff"/>
+                    <stop offset="100%" stop-color="#00d4aa"/>
+                  </linearGradient>
+                </defs>
+              </svg>
+              <div class="ring-text" id="ringText">0%</div>
+            </div>
+          </div>
+
+          <div class="score-breakdown" id="scoreBreakdown"></div>
+
+          <div class="ftab-bar">
+            <button class="ftab active" onclick="switchFtab(this,'summary')">📊 Summary</button>
+            <button class="ftab" onclick="switchFtab(this,'strengths')">💪 Strengths</button>
+            <button class="ftab" onclick="switchFtab(this,'improve')">📈 Improvements</button>
+            <button class="ftab" onclick="switchFtab(this,'model')">🌟 Model Answer</button>
+          </div>
+
+          <div class="ftab-content active" id="ftab-summary"></div>
+          <div class="ftab-content" id="ftab-strengths"></div>
+          <div class="ftab-content" id="ftab-improve"></div>
+          <div class="ftab-content" id="ftab-model"></div>
+
+          <div style="margin-top:20px;display:flex;gap:12px;">
+            <button class="btn btn-primary" id="nextQBtn" onclick="nextQuestion()">Next Question ➡️</button>
+            <button class="btn btn-outline" onclick="retryQuestion()">🔄 Retry This Question</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════ AI COACH CHAT ══════════════ -->
+    <div class="page" id="page-chat">
+      <div class="hero-section" style="margin-bottom:20px">
+        <div class="hero-greeting">🤖 AI Coach</div>
+        <div class="hero-title">Your personal <span>interview mentor</span></div>
+        <div class="hero-subtitle">Ask anything about interviews, get personalized advice, and practice your answers.</div>
+      </div>
+
+      <div class="grid-2">
+        <div>
+          <div class="chat-container">
+            <div class="chat-header">
+              <div style="position:relative">
+                <div class="ai-avatar">🤖</div>
+                <div class="ai-status"></div>
+              </div>
+              <div class="ai-info">
+                <div class="ai-name">Alex – Interview Coach</div>
+                <div class="ai-desc">Powered by InterviewAI • Always available</div>
+              </div>
+              <button class="btn btn-outline btn-sm" onclick="clearChat()">Clear</button>
+            </div>
+            <div class="chat-messages" id="chatMessages">
+              <div class="message ai">
+                <div class="msg-avatar ai">🤖</div>
+                <div>
+                  <div class="msg-bubble">
+                    Hi! I'm Alex, your AI interview coach. I can help you with:<br><br>
+                    🎯 <strong>Mock practice</strong> – Roleplay interview questions<br>
+                    💡 <strong>Strategy</strong> – How to structure answers<br>
+                    📚 <strong>Knowledge</strong> – Technical concepts explained<br>
+                    💬 <strong>Feedback</strong> – Improve your responses<br><br>
+                    What would you like to work on today?
+                  </div>
+                  <div class="msg-time">Just now</div>
+                </div>
+              </div>
+            </div>
+            <div class="chat-input-area">
+              <textarea class="chat-textarea" id="chatInput" rows="1" placeholder="Ask me anything about interviews..."
+                onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat()}"></textarea>
+              <button class="chat-send" onclick="sendChat()">➤</button>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="section-title" style="margin-bottom:14px">💬 Quick <span>Questions</span></div>
+          <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px">
+            <button class="quick-btn" style="flex-direction:row;text-align:left;padding:14px" onclick="quickChat('Tell me about yourself - how should I answer this?')">
+              <span style="font-size:20px">🧑</span>
+              <span style="font-size:13px">How to answer "Tell me about yourself"?</span>
+            </button>
+            <button class="quick-btn" style="flex-direction:row;text-align:left;padding:14px" onclick="quickChat('What are the most common technical interview mistakes?')">
+              <span style="font-size:20px">⚠️</span>
+              <span style="font-size:13px">Common technical interview mistakes</span>
+            </button>
+            <button class="quick-btn" style="flex-direction:row;text-align:left;padding:14px" onclick="quickChat('How do I negotiate salary effectively?')">
+              <span style="font-size:20px">💰</span>
+              <span style="font-size:13px">Salary negotiation strategies</span>
+            </button>
+            <button class="quick-btn" style="flex-direction:row;text-align:left;padding:14px" onclick="quickChat('Explain the STAR method with an example for leadership')">
+              <span style="font-size:20px">⭐</span>
+              <span style="font-size:13px">STAR method explained with examples</span>
+            </button>
+            <button class="quick-btn" style="flex-direction:row;text-align:left;padding:14px" onclick="quickChat('What questions should I ask the interviewer at the end?')">
+              <span style="font-size:20px">🤔</span>
+              <span style="font-size:13px">Questions to ask the interviewer</span>
+            </button>
+            <button class="quick-btn" style="flex-direction:row;text-align:left;padding:14px" onclick="quickChat('How do I handle a question I dont know the answer to?')">
+              <span style="font-size:20px">❓</span>
+              <span style="font-size:13px">Handling unknown questions gracefully</span>
+            </button>
+          </div>
+
+          <div class="card">
+            <div class="section-title" style="margin-bottom:12px;font-size:15px">📊 Today's <span>Focus</span></div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <div style="padding:10px 14px;border-radius:10px;background:rgba(108,99,255,.1);border:1px solid rgba(108,99,255,.25);font-size:13px;cursor:pointer" onclick="quickChat('Give me 3 tips for system design interviews')">
+                🔧 System Design Fundamentals
+              </div>
+              <div style="padding:10px 14px;border-radius:10px;background:rgba(0,212,170,.1);border:1px solid rgba(0,212,170,.25);font-size:13px;cursor:pointer" onclick="quickChat('Explain how to crack behavioral questions using leadership examples')">
+                🌟 Behavioral Questions Mastery
+              </div>
+              <div style="padding:10px 14px;border-radius:10px;background:rgba(255,179,71,.1);border:1px solid rgba(255,179,71,.25);font-size:13px;cursor:pointer" onclick="quickChat('What are the top 5 most asked coding interview questions?')">
+                💻 Top Coding Patterns
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════ TIPS PAGE ══════════════ -->
+    <div class="page" id="page-tips">
+      <div class="tips-hero">
+        <div style="font-size:48px;margin-bottom:12px">💡</div>
+        <h2>Expert Interview Tips & Strategies</h2>
+        <p>Master the art of interviews with proven techniques used by top candidates</p>
+      </div>
+
+      <div class="tips-filter">
+        <button class="filter-btn active" onclick="filterTips(this,'all')">All Tips</button>
+        <button class="filter-btn" onclick="filterTips(this,'technical')">💻 Technical</button>
+        <button class="filter-btn" onclick="filterTips(this,'hr')">🤝 HR</button>
+        <button class="filter-btn" onclick="filterTips(this,'body')">🧘 Body Language</button>
+        <button class="filter-btn" onclick="filterTips(this,'mind')">🧠 Mindset</button>
+      </div>
+
+      <div class="tips-grid stagger" id="tipsGrid"></div>
+    </div>
+
+    <!-- ══════════════ PROGRESS PAGE ══════════════ -->
+    <div class="page" id="page-progress">
+      <div class="section-header">
+        <div class="section-title">📈 My <span>Progress</span></div>
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-outline btn-sm">Export Report</button>
+          <button class="btn btn-primary btn-sm" onclick="showPage('interview')">Practice Now</button>
+        </div>
+      </div>
+
+      <div class="progress-overview stagger">
+        <div class="po-card">
+          <div class="po-label">Total Sessions</div>
+          <div class="po-value" style="color:var(--primary)">24</div>
+          <div class="po-change">↑ 8 this month</div>
+        </div>
+        <div class="po-card">
+          <div class="po-label">Best Score</div>
+          <div class="po-value" style="color:var(--secondary)">94%</div>
+          <div class="po-change">Technical Round</div>
+        </div>
+        <div class="po-card">
+          <div class="po-label">Practice Hours</div>
+          <div class="po-value" style="color:var(--warning)">18.5h</div>
+          <div class="po-change">↑ 3.5h this week</div>
+        </div>
+        <div class="po-card">
+          <div class="po-label">Improvement</div>
+          <div class="po-value" style="color:var(--accent)">+24%</div>
+          <div class="po-change">Since day 1</div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="section-title" style="margin-bottom:18px;font-size:15px">🎯 Skill <span>Breakdown</span></div>
+          <div class="skill-bars">
+            <div class="skill-row">
+              <div class="skill-row-header">
+                <div class="skill-row-name">💻 Data Structures & Algorithms</div>
+                <div class="skill-row-pct">82%</div>
+              </div>
+              <div class="skill-row-bar"><div class="skill-row-fill" style="width:82%"></div></div>
+            </div>
+            <div class="skill-row">
+              <div class="skill-row-header">
+                <div class="skill-row-name">🏗️ System Design</div>
+                <div class="skill-row-pct">65%</div>
+              </div>
+              <div class="skill-row-bar"><div class="skill-row-fill" style="width:65%"></div></div>
+            </div>
+            <div class="skill-row">
+              <div class="skill-row-header">
+                <div class="skill-row-name">🗣️ Communication Skills</div>
+                <div class="skill-row-pct">88%</div>
+              </div>
+              <div class="skill-row-bar"><div class="skill-row-fill" style="width:88%"></div></div>
+            </div>
+            <div class="skill-row">
+              <div class="skill-row-header">
+                <div class="skill-row-name">🤝 HR & Behavioral</div>
+                <div class="skill-row-pct">79%</div>
+              </div>
+              <div class="skill-row-bar"><div class="skill-row-fill" style="width:79%"></div></div>
+            </div>
+            <div class="skill-row">
+              <div class="skill-row-header">
+                <div class="skill-row-name">⚡ Problem Solving Speed</div>
+                <div class="skill-row-pct">71%</div>
+              </div>
+              <div class="skill-row-bar"><div class="skill-row-fill" style="width:71%"></div></div>
+            </div>
+            <div class="skill-row">
+              <div class="skill-row-header">
+                <div class="skill-row-name">🎯 Answer Structure (STAR)</div>
+                <div class="skill-row-pct">84%</div>
+              </div>
+              <div class="skill-row-bar"><div class="skill-row-fill" style="width:84%"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="section-title" style="margin-bottom:18px;font-size:15px">📅 Activity <span>Heatmap</span></div>
+          <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px">Mon – Sun | Last 7 weeks</div>
+          <div class="activity-heatmap" id="heatmap"></div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:14px;font-size:12px;color:var(--text-muted)">
+            <span>Less</span>
+            <div class="heat-cell l0" style="width:14px;height:14px"></div>
+            <div class="heat-cell l1" style="width:14px;height:14px"></div>
+            <div class="heat-cell l2" style="width:14px;height:14px"></div>
+            <div class="heat-cell l3" style="width:14px;height:14px"></div>
+            <div class="heat-cell l4" style="width:14px;height:14px"></div>
+            <span>More</span>
+          </div>
+
+          <div class="sep"></div>
+          <div class="section-title" style="margin-bottom:14px;font-size:15px">📊 Performance <span>Radar</span></div>
+          <div class="radar-container">
+            <canvas id="radarChart" width="300" height="300"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════ LEADERBOARD ══════════════ -->
+    <div class="page" id="page-leaderboard">
+      <div class="hero-section" style="margin-bottom:24px">
+        <div class="hero-greeting">🏆 Global Rankings</div>
+        <div class="hero-title">Compete with <span>students worldwide</span></div>
+        <div class="hero-subtitle">Weekly leaderboard resets every Monday. Top 3 earn special badges!</div>
+      </div>
+
+      <div class="grid-2">
+        <div>
+          <div class="section-title" style="margin-bottom:16px">🌍 Global <span>Leaderboard</span></div>
+          <div id="leaderboardList"></div>
+        </div>
+        <div>
+          <div class="section-title" style="margin-bottom:16px">📊 Your <span>Stats</span></div>
+          <div class="card" style="margin-bottom:16px">
+            <div style="text-align:center;padding:16px 0">
+              <div style="font-size:48px;margin-bottom:8px">🥈</div>
+              <div style="font-size:36px;font-weight:900;color:var(--primary)">#142</div>
+              <div style="color:var(--text-muted);font-size:14px">Your Global Rank</div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px">
+              <div style="text-align:center;padding:12px;background:var(--bg3);border-radius:10px">
+                <div style="font-size:20px;font-weight:800;color:var(--secondary)">3,450</div>
+                <div style="font-size:12px;color:var(--text-muted)">Total XP</div>
+              </div>
+              <div style="text-align:center;padding:12px;background:var(--bg3);border-radius:10px">
+                <div style="font-size:20px;font-weight:800;color:var(--warning)">78%</div>
+                <div style="font-size:12px;color:var(--text-muted)">Avg Score</div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="section-title" style="margin-bottom:14px;font-size:15px">🎖️ Weekly <span>Rewards</span></div>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <div style="display:flex;align-items:center;gap:12px;padding:10px;border-radius:10px;background:rgba(255,215,0,.08);border:1px solid rgba(255,215,0,.2)">
+                <span style="font-size:22px">🥇</span>
+                <div><div style="font-weight:700;font-size:14px">1st Place</div><div style="font-size:12px;color:var(--text-muted)">500 XP + "Champion" badge</div></div>
+              </div>
+              <div style="display:flex;align-items:center;gap:12px;padding:10px;border-radius:10px;background:rgba(192,192,192,.08);border:1px solid rgba(192,192,192,.2)">
+                <span style="font-size:22px">🥈</span>
+                <div><div style="font-weight:700;font-size:14px">2nd Place</div><div style="font-size:12px;color:var(--text-muted)">300 XP + "Elite" badge</div></div>
+              </div>
+              <div style="display:flex;align-items:center;gap:12px;padding:10px;border-radius:10px;background:rgba(205,127,50,.08);border:1px solid rgba(205,127,50,.2)">
+                <span style="font-size:22px">🥉</span>
+                <div><div style="font-weight:700;font-size:14px">3rd Place</div><div style="font-size:12px;color:var(--text-muted)">150 XP + "Rising Star" badge</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════ ACHIEVEMENTS ══════════════ -->
+    <div class="page" id="page-achievements">
+      <div class="hero-section" style="margin-bottom:24px">
+        <div class="hero-greeting">🎖️ Achievements</div>
+        <div class="hero-title">Your <span>badges & milestones</span></div>
+        <div class="hero-subtitle">Earn achievements by practicing consistently and improving your scores.</div>
+      </div>
+      <div class="section-title" style="margin-bottom:16px">🏅 Earned <span>Badges</span> (8/20)</div>
+      <div class="achievement-grid stagger" id="achievementsGrid"></div>
+    </div>
+
+    <!-- RESULTS PAGE (hidden, shown after session) -->
+    <div class="page" id="page-results">
+      <div class="results-hero">
+        <span class="confetti" id="resultEmoji">🎉</span>
+        <div class="results-score-big"><span id="finalScore">0</span>%</div>
+        <div class="results-grade" id="resultGrade">Excellent!</div>
+        <div class="results-sub" id="resultSub">Great performance! Keep practicing to reach perfection.</div>
+        <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:16px">
+          <button class="btn btn-primary btn-lg" onclick="showPage('interview')">🔄 Start New Interview</button>
+          <button class="btn btn-outline btn-lg" onclick="showPage('dashboard')">🏠 Back to Dashboard</button>
+          <button class="btn btn-outline btn-lg" onclick="showPage('progress')">📈 View Progress</button>
+        </div>
+      </div>
+
+      <div class="results-grid stagger">
+        <div class="result-metric"><div class="rm-value" id="r-correct">0</div><div class="rm-label">Questions Answered</div></div>
+        <div class="result-metric"><div class="rm-value" id="r-time">0m</div><div class="rm-label">Time Taken</div></div>
+        <div class="result-metric"><div class="rm-value" id="r-conf">0%</div><div class="rm-label">Confidence Score</div></div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="section-title" style="margin-bottom:16px">📊 Score <span>Breakdown</span></div>
+          <div id="resultBreakdown"></div>
+        </div>
+        <div class="card">
+          <div class="section-title" style="margin-bottom:16px">🚀 Improvement <span>Tips</span></div>
+          <div id="resultTips"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <span class="toast-icon" id="toastIcon">✅</span>
+  <span id="toastMsg">Message here</span>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeSettings()">✕</button>
+    <h2>⚙️ Settings</h2>
+    <p>Customize your interview experience</p>
+    <div class="form-group">
+      <label class="form-label">Your Name</label>
+      <input class="form-input" value="John Doe" id="settingName"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Target Role</label>
+      <input class="form-input" value="Software Engineer" id="settingRole"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Experience Level</label>
+      <select class="form-select">
+        <option>Fresher (0-1 years)</option>
+        <option selected>Junior (1-3 years)</option>
+        <option>Mid-level (3-5 years)</option>
+        <option>Senior (5+ years)</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Daily Practice Goal</label>
+      <select class="form-select">
+        <option>1 interview / day</option>
+        <option selected>2 interviews / day</option>
+        <option>3 interviews / day</option>
+        <option>Custom</option>
+      </select>
+    </div>
+    <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="saveSettings()">Save Changes</button>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════
+// DATA BANK
+// ════════════════════════════════════════
+
+const QUESTIONS = {
+  technical: [
+    { q: "Explain the difference between a stack and a queue. When would you use each?", hint: "Think about LIFO vs FIFO. Consider examples like function calls (stack) and task scheduling (queue).", model: "A <strong>stack</strong> follows LIFO (Last In, First Out) – like a pile of plates. Use it for: undo functionality, function call management, expression evaluation, backtracking algorithms. A <strong>queue</strong> follows FIFO (First In, First Out) – like a waiting line. Use it for: task scheduling, BFS traversal, print spooling, message queues. The key is whether you need to access the most recent or the oldest element first.", tags: ['DSA', 'Data Structures'] },
+    { q: "What is Big O notation? Explain O(1), O(n), O(n²), and O(log n) with examples.", hint: "Big O describes worst-case time/space complexity. Think of simple examples: array access, loop, nested loop, binary search.", model: "Big O notation describes <strong>algorithm efficiency</strong> as input size grows. <strong>O(1)</strong>: Constant time – array index access, hash map lookup. <strong>O(n)</strong>: Linear time – iterating through an array. <strong>O(n²)</strong>: Quadratic – nested loops, bubble sort. <strong>O(log n)</strong>: Logarithmic – binary search, balanced BST operations. Always analyze worst-case and mention space complexity too.", tags: ['Complexity', 'Algorithms'] },
+    { q: "Describe the concept of Object-Oriented Programming and its four pillars.", hint: "Four pillars: Encapsulation, Inheritance, Polymorphism, Abstraction. Give real-world examples.", model: "OOP organizes code around <strong>objects</strong> with four key pillars: <strong>Encapsulation</strong>: Bundling data and methods, hiding internal state (private fields + getters/setters). <strong>Inheritance</strong>: Child classes extend parent classes, promoting code reuse (Car extends Vehicle). <strong>Polymorphism</strong>: Same interface, different behaviors (method overriding/overloading). <strong>Abstraction</strong>: Hiding complexity, showing only what's needed (abstract classes, interfaces). These principles promote maintainable, modular code.", tags: ['OOP', 'Concepts'] },
+    { q: "How does a hash table work? What happens during a collision?", hint: "Hash function + array. Collision resolution: chaining (linked lists) or open addressing (probing).", model: "A <strong>hash table</strong> maps keys to values using a hash function that converts keys to array indices. When two keys hash to the same index – a <strong>collision</strong> – we resolve it via: <strong>Chaining</strong>: Each bucket holds a linked list of entries (simple, but extra memory). <strong>Open Addressing</strong>: Probe for the next empty slot (linear/quadratic probing). Average O(1) lookup, worst case O(n) with bad hash function. Good hash tables maintain a load factor < 0.7.", tags: ['DSA', 'Hash Tables'] },
+    { q: "What is the difference between SQL and NoSQL databases? Give examples of each.", hint: "SQL = relational, structured schema. NoSQL = flexible, scalable. Examples: MySQL vs MongoDB.", model: "<strong>SQL (Relational)</strong>: Structured tables with fixed schema, ACID transactions, powerful JOIN operations. Best for: financial apps, ERP systems. Examples: MySQL, PostgreSQL, Oracle. <strong>NoSQL</strong>: Flexible schema, horizontal scaling, various data models (document, key-value, column, graph). Best for: social media, real-time analytics, IoT. Examples: MongoDB (document), Redis (key-value), Cassandra (column). Choose based on data structure, consistency needs, and scale requirements.", tags: ['DBMS', 'Databases'] },
+    { q: "Explain REST API principles and HTTP methods.", hint: "REST = stateless, client-server. HTTP methods: GET, POST, PUT, PATCH, DELETE.", model: "REST (Representational State Transfer) is an architectural style with 6 constraints: <strong>Stateless</strong>: Each request has all needed information. <strong>Client-Server</strong>: Separation of concerns. <strong>Uniform Interface</strong>: Consistent resource URLs. HTTP methods: <strong>GET</strong> (read), <strong>POST</strong> (create), <strong>PUT</strong> (replace), <strong>PATCH</strong> (partial update), <strong>DELETE</strong> (remove). Status codes: 200 (OK), 201 (Created), 404 (Not Found), 500 (Server Error). Use meaningful URLs like /api/users/{id}.", tags: ['API', 'Web'] },
+    { q: "What is recursion? Explain with an example and discuss its drawbacks.", hint: "Base case + recursive call. Example: factorial, fibonacci. Drawbacks: stack overflow, performance.", model: "<strong>Recursion</strong> is when a function calls itself to solve smaller subproblems. Example: factorial(n) = n × factorial(n-1), base case: factorial(0) = 1. Advantages: Clean code for tree/graph traversal, divide-and-conquer. Drawbacks: <strong>Stack overflow</strong> for deep recursion, <strong>Higher memory usage</strong> (call stack frames), potentially <strong>slower</strong> than iteration due to overhead. Solution: use <strong>memoization</strong> (top-down DP) or convert to iteration with explicit stack.", tags: ['Algorithms', 'Recursion'] },
+    { q: "Describe the Singleton design pattern. When should and shouldn't you use it?", hint: "One instance, global access. Use for: logging, config, DB connections. Avoid for: testing, tight coupling.", model: "The <strong>Singleton pattern</strong> ensures a class has only one instance with a global access point. Implementation: private constructor + static getInstance() method + lazy initialization. <strong>Use when</strong>: logging systems, configuration managers, database connection pools, caches. <strong>Avoid when</strong>: it's hard to unit test (hidden dependencies), creates tight coupling, in multi-threaded environments (without synchronization), or when you might need multiple instances later. Modern code often uses dependency injection instead.", tags: ['Design Patterns', 'OOP'] },
+    { q: "What is a deadlock? How do you prevent it?", hint: "Four necessary conditions: Mutual exclusion, Hold and wait, No preemption, Circular wait. Prevention: break any condition.", model: "A <strong>deadlock</strong> occurs when threads block each other indefinitely, each waiting for a resource held by another. <strong>Four necessary conditions</strong>: Mutual exclusion, Hold & Wait, No Preemption, Circular Wait. <strong>Prevention strategies</strong>: 1) Lock ordering (always acquire locks in the same order), 2) Timeout and retry, 3) Deadlock detection with recovery, 4) Banker's algorithm (resource allocation graph). In Java: use tryLock() with timeout, avoid nested locks, or use higher-level concurrency utilities.", tags: ['OS', 'Concurrency'] },
+    { q: "Explain how a binary search tree works and its time complexities.", hint: "Left < root < right. Average O(log n), worst case O(n) for unbalanced tree.", model: "A <strong>BST</strong> is a binary tree where left subtree has values < node and right subtree > node. Operations: <strong>Search</strong>: compare key, go left/right until found or null. <strong>Insert</strong>: find correct position, add node. <strong>Delete</strong>: three cases – leaf, one child, two children (use inorder successor). Time complexity: average <strong>O(log n)</strong> for balanced tree, worst <strong>O(n)</strong> for skewed tree. Solution: use self-balancing trees (AVL, Red-Black) to guarantee O(log n). Used in: databases, file systems, sorted data.", tags: ['DSA', 'Trees'] }
+  ],
+  hr: [
+    { q: "Tell me about yourself. Walk me through your background and experience.", hint: "Use the Present-Past-Future formula: current role, background, and future goals. Keep it under 2 minutes.", model: "Structure as <strong>Present-Past-Future</strong>: Start with your current role and key responsibilities, then briefly cover your educational/professional background highlighting relevant achievements, then connect to why you're excited about this opportunity. Example: 'I'm currently a [role] at [company] where I [key achievement]. Before that, I studied [field] at [university] and [relevant experience]. I'm looking to [future goal] and I believe this role at [company] is the perfect fit because [specific reason].' Keep it to 1.5-2 minutes – professional but engaging.", tags: ['Introduction', 'HR'] },
+    { q: "Describe a challenging situation you faced and how you overcame it.", hint: "Use the STAR method: Situation, Task, Action, Result. Pick a real professional/academic challenge.", model: "Use the <strong>STAR method</strong>: <strong>Situation</strong>: 'During my final year project, our team had conflicting technical approaches and a tight deadline.' <strong>Task</strong>: 'As team lead, I needed to align the team and deliver on time.' <strong>Action</strong>: 'I organized a structured discussion, gathered everyone's input, created a decision matrix to evaluate options objectively, and held daily 15-min standups.' <strong>Result</strong>: 'We delivered the project 2 days early, received an A grade, and our conflict-resolution process became the department's template.' Always quantify results where possible.", tags: ['Behavioral', 'STAR', 'HR'] },
+    { q: "Where do you see yourself in 5 years?", hint: "Show ambition but align with company growth. Be realistic, specific, and connect to the role.", model: "Frame as growth aligned with the company: 'In 5 years, I see myself as a <strong>technical lead or senior engineer</strong>, having mastered [relevant skills]. I plan to [specific milestone] within the first 2 years, then take on [leadership/complex projects]. I'm particularly excited about growing in [company's focus area]. I believe companies that invest in their people see the best results, and I'm looking for a long-term home where I can contribute significantly while developing professionally.' Show commitment, not job-hopping mentality.", tags: ['Career Goals', 'HR'] },
+    { q: "What is your greatest weakness? How are you working on it?", hint: "Be honest but strategic. Pick a real weakness that isn't critical to the role. Show improvement steps.", model: "Be genuine and proactive: 'My greatest weakness is <strong>difficulty delegating tasks</strong>. As a perfectionist, I often take on too much myself. However, I've recognized this: I now use a delegation framework – if someone can do a task 80% as well as me, I delegate it. I've been practicing this for 6 months and have seen my team's ownership increase while my output has actually improved. I'm also taking a leadership workshop to develop this skill further.' Always end with concrete steps you're taking to improve.", tags: ['Self-awareness', 'HR'] },
+    { q: "Tell me about a time you showed leadership, even without a formal title.", hint: "Leadership is about influence, not position. Think of times you took initiative, motivated others, or resolved conflict.", model: "Demonstrate informal leadership: 'During a group project, our team was struggling with unclear requirements. Without being asked, I <strong>scheduled a meeting with stakeholders</strong>, created a requirements document, and assigned clear ownership. I also created a Kanban board to track progress. <strong>Actions</strong>: Held daily standups, resolved conflicts by focusing on data not opinions, recognized team contributions publicly. <strong>Result</strong>: Project delivered on time, team satisfaction improved, and my professor asked me to share our process with other groups.' Leadership is about serving the team.", tags: ['Leadership', 'Behavioral', 'HR'] },
+    { q: "Why do you want to work at our company specifically?", hint: "Research the company! Mention specific products, culture, mission, or recent news. Show genuine interest.", model: "Be specific, not generic: 'I'm drawn to [Company] for three reasons: <strong>Mission alignment</strong> – your commitment to [specific mission] resonates with my values. <strong>Technical excellence</strong> – your [specific product/tech] is industry-leading, and I want to learn from the best engineers. <strong>Culture</strong> – I read about your [specific program/value] and the emphasis on [growth/learning/innovation] aligns with how I work. Specifically, I'm excited about [recent project/announcement] and believe my experience in [relevant skill] would let me contribute meaningfully from day one.' Always research before the interview!", tags: ['Company Research', 'Motivation', 'HR'] },
+    { q: "Describe how you handle working under pressure and tight deadlines.", hint: "Give concrete example. Show prioritization, communication, and staying calm under pressure.", model: "Demonstrate resilience: 'I <strong>thrive under structured pressure</strong>. My approach: First, I immediately <strong>triage and prioritize</strong> – what's critical path vs nice-to-have. Then I communicate proactively with stakeholders about realistic timelines. I break large tasks into 2-hour focused sprints. Example: When our launch was moved up 2 weeks, I [specific action taken]. Result: [quantified outcome]. I also ensure I don't sacrifice code quality under pressure – quick hacks create long-term debt. After high-pressure periods, I do retrospectives to improve processes.' Show both capability and strategic thinking.", tags: ['Pressure', 'Work Style', 'HR'] },
+    { q: "How do you handle disagreement with a manager or senior team member?", hint: "Show respect, data-driven approach, willingness to compromise, and knowing when to escalate.", model: "Show emotional intelligence: 'I <strong>respect authority while standing by data</strong>. My approach: First, I ensure I fully understand their perspective – maybe I'm missing context. Then, if I still disagree, I request a private discussion and present my view with specific data/examples, not opinions. Example: 'When my manager wanted [X approach], I respectfully shared [specific data] suggesting [Y] would be more efficient. We had a productive discussion, ended up with a hybrid solution that worked better than both.' I've learned that the best decisions come from respectful debate. If truly stuck, I defer to their experience while documenting my concerns." , tags: ['Conflict Resolution', 'HR'] }
+  ],
+  mixed: []
+};
+
+// Create mixed questions
+QUESTIONS.mixed = [...QUESTIONS.technical.slice(0,4), ...QUESTIONS.hr.slice(0,4)];
+
+const TIPS_DATA = [
+  { icon: '🔢', iconClass: 'tech', cat: 'technical', title: 'Master the STAR Method for Technical Questions', catLabel: 'Technical',
+    body: 'Even for technical questions, structure your answers with context, problem definition, your approach, and results.',
+    points: ['Start with the problem context briefly','Explain your thought process step-by-step','Discuss trade-offs you considered','Quantify the impact of your solution','Mention what you learned'] },
+  { icon: '🗣️', iconClass: 'hr', cat: 'hr', title: 'Mirror & Match Communication Style', catLabel: 'HR',
+    body: 'Match your vocabulary and pace to your interviewer. More technical interviewers appreciate precision; HR prefers stories.',
+    points: ['Listen for the interviewer\'s keywords and use them','Adjust formality based on company culture','Use "I" for individual contributions, "we" for team work','Avoid filler words: "um", "like", "basically"','Pause before answering – it shows thoughtfulness'] },
+  { icon: '🧘', iconClass: 'body', cat: 'body', title: 'Body Language Speaks First', catLabel: 'Body Language',
+    body: '55% of communication is non-verbal. Your posture, eye contact, and gestures convey confidence before you speak.',
+    points: ['Sit straight, lean slightly forward (shows engagement)','Maintain soft eye contact (not a stare)','Smile genuinely – it releases tension for both sides','Use deliberate hand gestures to emphasize points','Avoid crossing arms – it signals defensiveness'] },
+  { icon: '🧠', iconClass: 'mind', cat: 'mind', title: 'The Power of Pre-Interview Visualization', catLabel: 'Mindset',
+    body: 'Olympic athletes use visualization. Mentally rehearsing success programs your brain for confidence.',
+    points: ['Night before: visualize the interview going well','Morning of: review your 5 best stories','Do a "power pose" for 2 mins before entering','Replace anxiety with excitement (same physiological state)','Remember: they\'re evaluating fit, not judging you'] },
+  { icon: '💻', iconClass: 'tech', cat: 'technical', title: 'Thinking Out Loud in Coding Interviews', catLabel: 'Technical',
+    body: 'Interviewers evaluate your problem-solving process, not just the final answer. Narrate your thinking.',
+    points: ['Repeat the problem in your own words','Ask clarifying questions before coding','Start with brute force, then optimize','Trace through examples before/after coding','Discuss time and space complexity unprompted'] },
+  { icon: '🤝', iconClass: 'hr', cat: 'hr', title: 'Research the Company Like a Detective', catLabel: 'HR',
+    body: 'Nothing impresses an interviewer more than company-specific knowledge. Generic answers get filtered out.',
+    points: ['Read their About page, mission, recent news','Know their top 3 products/services','Check Glassdoor for culture insights','Follow their LinkedIn and Twitter/X','Prepare 3 smart questions to ask them'] },
+  { icon: '💪', iconClass: 'body', cat: 'body', title: 'Managing Interview Anxiety Physically', catLabel: 'Body Language',
+    body: 'Physical techniques to calm nerves that you can do before and during the interview.',
+    points: ['4-7-8 breathing: inhale 4s, hold 7s, exhale 8s','Press feet firmly on floor to ground yourself','Drink water slowly if nervous (slows heart rate)','Pause after a question – silence is professional','If you lose track, say "Let me organize my thoughts"'] },
+  { icon: '🌟', iconClass: 'mind', cat: 'mind', title: 'Build a Story Bank (30 Stories Method)', catLabel: 'Mindset',
+    body: 'Prepare 30 stories from your experience that can be adapted to any behavioral question.',
+    points: ['5 leadership stories','5 challenge/failure stories','5 teamwork stories','5 achievement/success stories','5 learning/growth stories','5 conflict resolution stories'] },
+  { icon: '📊', iconClass: 'tech', cat: 'technical', title: 'System Design Interview Framework', catLabel: 'Technical',
+    body: 'Use RESHADED framework for any system design question to demonstrate comprehensive thinking.',
+    points: ['R: Requirements (functional & non-functional)','E: Estimation (scale, traffic, storage)','S: Storage (database choice)','H: High-level design (components)','A: APIs definition','D: Deep dive (most complex component)','E: Extensions and bottlenecks'] },
+  { icon: '🎯', iconClass: 'hr', cat: 'hr', title: 'Negotiate Salary with Confidence', catLabel: 'HR',
+    body: 'Salary negotiation can increase your offer by 10-30%. Never be the first to name a number.',
+    points: ['Research market rate on Glassdoor/LinkedIn','Let them make the first offer','Counter 15-20% above your target','Negotiate total compensation (not just salary)','Always get the final offer in writing','Express enthusiasm regardless of negotiation'] },
+];
+
+const ACHIEVEMENTS_DATA = [
+  { icon: '🎯', name: 'First Blood', desc: 'Completed first interview', unlocked: true, date: '15 Sep' },
+  { icon: '🔥', name: 'On Fire', desc: '5-day streak', unlocked: true, date: '18 Sep' },
+  { icon: '⭐', name: 'Star Performer', desc: 'Score 90%+ in any interview', unlocked: true, date: '22 Sep' },
+  { icon: '💪', name: 'Hustler', desc: 'Completed 10 interviews', unlocked: true, date: '28 Sep' },
+  { icon: '🤝', name: 'HR Ace', desc: 'Perfect HR round score', unlocked: true, date: '2 Oct' },
+  { icon: '💻', name: 'Tech Wizard', desc: '85%+ in 3 technical rounds', unlocked: true, date: '5 Oct' },
+  { icon: '📈', name: 'Improving', desc: 'Improved score 3 sessions in a row', unlocked: true, date: '8 Oct' },
+  { icon: '🌙', name: 'Night Owl', desc: 'Practiced after 10pm', unlocked: true, date: '10 Oct' },
+  { icon: '🏆', name: 'Champion', desc: 'Rank #1 weekly', unlocked: false },
+  { icon: '💯', name: 'Perfectionist', desc: 'Score 100% in any interview', unlocked: false },
+  { icon: '📚', name: 'Scholar', desc: 'Read all tip categories', unlocked: false },
+  { icon: '🚀', name: 'Rocket', desc: 'Complete 50 interviews', unlocked: false },
+  { icon: '🎤', name: 'Voice Master', desc: 'Use voice mode 10 times', unlocked: false },
+  { icon: '👑', name: 'Legend', desc: 'Maintain 30-day streak', unlocked: false },
+  { icon: '🌍', name: 'Global Top 10', desc: 'Reach global top 10 rank', unlocked: false },
+  { icon: '🧠', name: 'Genius', desc: 'Perfect DSA score', unlocked: false },
+  { icon: '🎭', name: 'Actor', desc: 'Complete 5 HR interviews', unlocked: false },
+  { icon: '⚡', name: 'Speed Run', desc: 'Answer all questions < 60s avg', unlocked: false },
+  { icon: '🤖', name: 'AI Partner', desc: 'Chat 20 messages with AI coach', unlocked: false },
+  { icon: '🌟', name: 'Ultimate', desc: 'Unlock 15 achievements', unlocked: false },
+];
+
+const LEADERBOARD_DATA = [
+  { rank: 1, name: 'Priya Sharma', score: 4820, emoji: '👩', color: '#6c63ff', badge: '🏆' },
+  { rank: 2, name: 'Arjun Mehta', score: 4650, emoji: '👨', color: '#00d4aa', badge: '🥈' },
+  { rank: 3, name: 'Sneha Patel', score: 4430, emoji: '👩', color: '#ffb347', badge: '🥉' },
+  { rank: 4, name: 'Rahul Kumar', score: 4200, emoji: '👨', color: '#ff6584' },
+  { rank: 5, name: 'Ananya Singh', score: 4050, emoji: '👩', color: '#6c63ff' },
+  { rank: 6, name: 'Vikram Rao', score: 3900, emoji: '👨', color: '#00d4aa' },
+  { rank: 7, name: 'Divya Nair', score: 3750, emoji: '👩', color: '#ffb347' },
+  { rank: 8, name: 'Karthik M', score: 3600, emoji: '👨', color: '#ff6584' },
+  { rank: 9, name: 'Meera Joshi', score: 3500, emoji: '👩', color: '#6c63ff' },
+  { rank: 10, name: 'Rohan Das', score: 3480, emoji: '👨', color: '#00d4aa' },
+  { rank: 'YOU', name: 'John Doe', score: 3450, emoji: '🧑', color: '#6c63ff', isYou: true },
+];
+
+const AI_RESPONSES = {
+  'tell me about yourself': `Great question! Here's a winning framework for "Tell me about yourself":
+
+**The Present-Past-Future Formula (2 minutes max):**
+
+🎯 **Present**: Start with your current situation
+*"I'm currently a [Role] at [Company/University] where I [key achievement]..."*
+
+📚 **Past**: Your relevant background  
+*"Before that, I [education/previous experience] where I learned [relevant skills]..."*
+
+🚀 **Future**: Why you're here
+*"I'm excited about this opportunity because [specific reason aligned with their mission]..."*
+
+**Pro Tips:**
+- Practice until it sounds natural, not memorized
+- Include 1-2 quantified achievements
+- End by connecting your story to THEIR needs
+- Keep it under 2 minutes — if they want more, they'll ask
+
+Want me to help you craft YOUR specific version?`,
+
+  'common technical interview mistakes': `Here are the **Top 10 Technical Interview Killers** to avoid:
+
+❌ **1. Jumping to code immediately**
+Always clarify requirements first. Ask: edge cases? constraints? expected input/output?
+
+❌ **2. Silent coding**
+Think out loud! Interviewers can't evaluate what they can't hear.
+
+❌ **3. Ignoring time/space complexity**
+Always analyze Big O — even if not asked.
+
+❌ **4. Not testing your code**
+Walk through examples, especially edge cases: empty input, single element, max size.
+
+❌ **5. Giving up when stuck**
+Say "I'm approaching this differently" and try a simpler brute-force first.
+
+❌ **6. Not asking clarifying questions**
+Shows poor communication. Always clarify before coding.
+
+❌ **7. Brittle solutions**
+Code should handle all cases, not just the happy path.
+
+❌ **8. Poor variable naming**
+\`x\`, \`temp\`, \`data\` — use descriptive names.
+
+❌ **9. Not knowing your complexity**
+If you can't analyze your solution, that's a red flag.
+
+❌ **10. Not asking questions at the end**
+Always have 2-3 thoughtful questions ready.
+
+Which of these do you struggle with most? Let's practice! 🎯`,
+
+  'salary negotiation': `💰 **Salary Negotiation Masterclass**
+
+The golden rule: **Never name a number first.** Here's why and how:
+
+**Step 1: Research your market value**
+- Glassdoor, LinkedIn Salary, Levels.fyi (for tech)
+- Know the range for your role, location, experience
+
+**Step 2: Deflect the first question**
+*"I'm more focused on finding the right fit. What's the budgeted range for this role?"*
+
+**Step 3: Counter strategically**
+If they give a range, target 15-20% above your actual minimum:
+*"Based on my research and [specific skills/experience], I was expecting something closer to [number]. Is there flexibility there?"*
+
+**Step 4: Negotiate total compensation**
+- Base salary (most negotiable)
+- Signing bonus (often easier to increase)
+- Equity/stock options
+- Remote work flexibility (worth \$5-15k in commute savings)
+- Learning & development budget
+
+**Step 5: Get it in writing**
+Never resign from your current job without a written offer.
+
+**Power phrase:** *"I'm very excited about this role. This is just a numbers conversation — is there flexibility to get to [X]?"*
+
+Want to roleplay a negotiation scenario? 🎭`,
+
+  'star method': `⭐ **The STAR Method Explained**
+
+STAR = Situation → Task → Action → Result
+
+Let's use a **Leadership Example**:
+
+---
+
+**❓ Question:** "Tell me about a time you led a team through a difficult project."
+
+**🌍 Situation** (10% of answer)
+*"During my third year, our 5-person capstone project team was falling behind schedule. Two members were conflicting over technical approach, and morale was dropping 2 weeks before submission."*
+
+**🎯 Task** (10% of answer)
+*"As the informal team lead, I needed to align everyone and recover the timeline without losing quality."*
+
+**⚡ Action** (60% of answer — this is the most important!)
+*"I took three steps:
+1. **Mediated** the technical conflict by creating an objective comparison matrix — let data decide
+2. **Restructured** our workflow using a simple Kanban board and daily 10-min standups
+3. **Motivated** the team by celebrating small wins and clearly connecting tasks to our grade"*
+
+**✅ Result** (20% of answer)
+*"We submitted 2 days early, received an A+, and our conflict-resolution process was shared with other groups. Two team members told me it was the best team experience they'd had."*
+
+---
+
+**Key STAR tips:**
+- Action should be 60% of your answer
+- Quantify results whenever possible
+- Practice 10 stories adaptable to any question
+
+Want me to help you build a STAR story from your experience? 🎯`,
+
+  'questions to ask': `🤔 **Best Questions to Ask Your Interviewer**
+
+Asking smart questions shows preparation and genuine interest. Here's your arsenal:
+
+**🏢 About the Role:**
+- *"What does success look like in this role after 90 days?"*
+- *"What are the biggest challenges someone in this position typically faces?"*
+- *"How has this role evolved over the past 2 years?"*
+
+**👥 About the Team:**
+- *"What's the team's biggest achievement in the past year?"*
+- *"How does the team handle disagreements or technical debates?"*
+- *"Who would I be collaborating with most closely?"*
+
+**🚀 About Growth:**
+- *"What learning opportunities or mentorship does the company offer?"*
+- *"Where have previous people in this role advanced to?"*
+- *"How does the company invest in employee development?"*
+
+**🌍 About Culture:**
+- *"How would you describe the team culture in one sentence?"*
+- *"What do you personally enjoy most about working here?"*
+
+**⚠️ Questions to AVOID:**
+- Anything answered on their website
+- "What does your company do?"
+- Salary questions in the first round (let HR ask)
+- "How much vacation do I get?"
+
+**Pro tip:** Always prepare 5 questions — you may use 2-3, but having extras shows depth. 
+
+Ready to practice asking these? 🎯`,
+
+  'unknown questions': `❓ **Handling Questions You Don't Know**
+
+This happens to everyone — even experts. Here's how to turn it into a strength:
+
+**🛑 Never do this:**
+- Fake it — interviewers can tell
+- Go silent and panic
+- Simply say "I don't know" and stop
+
+**✅ The BRIDGE Technique:**
+
+1. **Buy time gracefully:**
+*"That's a great question — let me think through it..."* (Silence = confidence, not weakness)
+
+2. **Show your thought process:**
+*"I haven't encountered this exact scenario, but here's how I'd approach it..."*
+
+3. **Use related knowledge:**
+*"While I'm not 100% certain of [X], I know that [related concept]..."*
+
+4. **Be honest about the gap:**
+*"I'm not as strong on [topic] as I'd like — it's actually on my learning list. But I'm a fast learner..."*
+
+5. **Ask to return to it:**
+*"Could we come back to this? I want to make sure I give you a thoughtful answer."*
+
+**Example response:**
+*"I haven't worked directly with [technology], but based on my understanding of [related tech], I would approach it by [logical reasoning]. I'd definitely want to research [specific aspect] more. What's been your team's experience with it?"*
+
+**The key insight:** Interviewers often ask questions outside your knowledge on purpose — to see how you handle uncertainty. Your process matters more than the answer.
+
+Want to practice with a few tricky questions? 🎯`,
+
+  'system design': `🔧 **System Design Interview Masterclass**
+
+Use the **RESHADED framework** to crush any system design question:
+
+**📋 R — Requirements (5-10 mins)**
+Ask clarifying questions:
+- How many users? (Daily Active Users)
+- Read-heavy or write-heavy?
+- Consistency vs. availability priority?
+- Any special features?
+
+**📊 E — Estimation**
+Back-of-envelope calculations:
+- Traffic: QPS (Queries Per Second)
+- Storage: X users × Y data/user × Z years
+- Bandwidth: in/out per second
+
+**💾 S — Storage Schema**
+- SQL vs NoSQL choice (with justification)
+- Key entities and relationships
+- Indexing strategy
+
+**🏗️ H — High-Level Design**
+Draw core components:
+- Load Balancer → API Servers → Cache → Database
+- CDN for static assets
+- Message Queue for async operations
+
+**🔌 A — APIs**
+Define REST endpoints with methods and params
+
+**🔬 D — Deep Dive**
+Pick the most complex component to detail:
+- Database sharding strategy
+- Caching layers (Redis, Memcached)
+- How reads/writes flow
+
+**⚡ E — Extensions**
+- How to handle failures?
+- How does it scale to 10x traffic?
+- What are the bottlenecks?
+
+**Example System Design Q:** "Design a URL Shortener (like bit.ly)"
+
+Want me to walk you through solving a specific system design question? 🎯`,
+
+  'behavioral': `🌟 **Mastering Behavioral Questions**
+
+Behavioral questions follow the pattern: *"Tell me about a time when..."*
+
+**Why companies ask these:**
+Past behavior predicts future performance. They're assessing your actual experience, not hypothetical.
+
+**The STAR+ Framework:**
+- **S**ituation (10%) — Brief context
+- **T**ask (10%) — Your responsibility
+- **A**ction (60%) — What YOU specifically did (use "I", not "we")
+- **R**esult (20%) — Quantified outcome
+
+**STAR+**: Add **L**earned — what you took away from the experience.
+
+**The 30-Story Method:**
+Build a story bank covering:
+- 🏆 5 achievement stories
+- 💪 5 leadership stories  
+- 🤝 5 teamwork/collaboration stories
+- 🚧 5 challenge/failure/recovery stories
+- 💡 5 innovation/creativity stories
+- 📈 5 growth/learning stories
+
+**Power phrases to start answers:**
+- *"One situation that stands out is..."*
+- *"A challenge I'm particularly proud of overcoming..."*
+- *"This reminds me of when our team..."*
+
+**Common behavioral questions:**
+1. Tell me about a failure and what you learned
+2. Describe a conflict with a coworker
+3. When did you take initiative without being asked?
+4. Tell me about your greatest professional achievement
+5. How did you handle a difficult deadline?
+
+Want help building your personal story bank? 💪`
+};
+
+// ════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════
+let currentCategory = 'technical';
+let currentDiff = 'easy';
+let currentQuestions = [];
+let currentQIndex = 0;
+let totalQs = 8;
+let timerInterval = null;
+let timerSeconds = 120;
+let isRecording = false;
+let waveInterval = null;
+let sessionScores = [];
+let sessionStartTime = null;
+let currentTab = 'text';
+
+// ════════════════════════════════════════
+// NAVIGATION
+// ════════════════════════════════════════
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  // Highlight nav
+  document.querySelectorAll('.nav-item').forEach(n => {
+    if (n.getAttribute('onclick') && n.getAttribute('onclick').includes(id)) n.classList.add('active');
+  });
+  // Lazy init
+  if (id === 'progress') initProgress();
+  if (id === 'leaderboard') initLeaderboard();
+  if (id === 'achievements') initAchievements();
+  if (id === 'tips') initTips();
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+// ════════════════════════════════════════
+// INTERVIEW FLOW
+// ════════════════════════════════════════
+function selectCategory(el, cat) {
+  document.querySelectorAll('.category-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  currentCategory = cat;
+}
+
+function setDiff(el, diff) {
+  document.querySelectorAll('.diff-btn').forEach(d => d.classList.remove('active'));
+  el.classList.add('active');
+  currentDiff = diff;
+}
+
+function startQuickInterview(cat) {
+  currentCategory = cat;
+  document.querySelectorAll('.category-card').forEach(c => c.classList.remove('selected'));
+  const catEl = document.getElementById('cat-' + cat);
+  if (catEl) catEl.classList.add('selected');
+  showPage('interview');
+  startInterview();
+}
+
+function startInterview() {
+  totalQs = parseInt(document.getElementById('numQuestions').value) || 8;
+  const pool = [...QUESTIONS[currentCategory]];
+  // shuffle
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  currentQuestions = pool.slice(0, Math.min(totalQs, pool.length));
+  currentQIndex = 0;
+  sessionScores = [];
+  sessionStartTime = Date.now();
+
+  document.getElementById('interviewSetup').style.display = 'none';
+  document.getElementById('interviewArena').style.display = 'block';
+
+  const diffLabel = {easy:'Easy',medium:'Medium',hard:'Hard'}[currentDiff];
+  const catLabel = {technical:'Technical',hr:'HR & Behavioral',mixed:'Full Round'}[currentCategory];
+  document.getElementById('arenaTitle').textContent = `${catLabel} – ${diffLabel}`;
+  document.getElementById('qTotal').textContent = currentQuestions.length;
+
+  loadQuestion();
+  showToast('✅', `Interview started! ${currentQuestions.length} questions ahead. You got this! 🚀`);
+}
+
+function loadQuestion() {
+  const q = currentQuestions[currentQIndex];
+  document.getElementById('qNum').textContent = currentQIndex + 1;
+  document.getElementById('qCurrent').textContent = currentQIndex + 1;
+  const pct = ((currentQIndex + 1) / currentQuestions.length * 100).toFixed(0);
+  document.getElementById('qPct').textContent = pct + '%';
+  document.getElementById('qProgress').style.width = pct + '%';
+  document.getElementById('questionText').textContent = q.q;
+  document.getElementById('qCatTag').textContent = q.tags[0];
+  document.getElementById('hintBox').textContent = q.hint;
+  document.getElementById('hintBox').classList.remove('show');
+  document.getElementById('answerText').value = '';
+  document.getElementById('starS').value = '';
+  document.getElementById('starT').value = '';
+  document.getElementById('starA').value = '';
+  document.getElementById('starR').value = '';
+  document.getElementById('feedbackPanel').classList.remove('show');
+  document.getElementById('nextQBtn').textContent = currentQIndex < currentQuestions.length - 1 ? 'Next Question ➡️' : 'Finish Interview 🏁';
+  resetTimer();
+}
+
+function toggleHint() {
+  document.getElementById('hintBox').classList.toggle('show');
+}
+
+function switchTab(el, tab) {
+  currentTab = tab;
+  document.querySelectorAll('.answer-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('answerText').style.display = tab === 'text' ? 'block' : 'none';
+  const vs = document.getElementById('voiceSection');
+  vs.classList.toggle('show', tab === 'voice');
+  document.getElementById('starSection').style.display = tab === 'structured' ? 'block' : 'none';
+  if (tab === 'voice') initWave();
+}
+
+// TIMER
+function resetTimer() {
+  clearInterval(timerInterval);
+  const diffTime = {easy: 120, medium: 150, hard: 180}[currentDiff];
+  timerSeconds = diffTime;
+  updateTimerDisplay();
+  timerInterval = setInterval(() => {
+    timerSeconds--;
+    updateTimerDisplay();
+    if (timerSeconds <= 0) {
+      clearInterval(timerInterval);
+      showToast('⏰', 'Time is up! Submitting your answer...');
+      setTimeout(submitAnswer, 1000);
+    }
+  }, 1000);
+}
+
+function updateTimerDisplay() {
+  const m = Math.floor(timerSeconds / 60).toString().padStart(2,'0');
+  const s = (timerSeconds % 60).toString().padStart(2,'0');
+  const el = document.getElementById('timerVal');
+  el.textContent = `${m}:${s}`;
+  const td = document.getElementById('timerDisplay');
+  if (timerSeconds <= 20) td.classList.add('danger');
+  else td.classList.remove('danger');
+}
+
+// VOICE
+function initWave() {
+  const wave = document.getElementById('voiceWave');
+  wave.innerHTML = '';
+  for (let i = 0; i < 20; i++) {
+    const bar = document.createElement('div');
+    bar.className = 'wave-bar';
+    bar.style.height = '4px';
+    wave.appendChild(bar);
+  }
+}
+
+function toggleRecording() {
+  isRecording = !isRecording;
+  const btn = document.getElementById('voiceBtn');
+  const status = document.getElementById('voiceStatus');
+  btn.classList.toggle('recording', isRecording);
+
+  if (isRecording) {
+    btn.textContent = '⏹️';
+    status.textContent = 'Recording... speak clearly';
+    animateWave(true);
+    // Simulate voice to text after 3s
+    setTimeout(() => {
+      if (isRecording) {
+        document.getElementById('answerText').value = getSampleAnswer();
+        status.textContent = '✅ Voice captured! Switch to text tab to review.';
+      }
+    }, 3000);
+  } else {
+    btn.textContent = '🎙️';
+    status.textContent = 'Recording stopped';
+    animateWave(false);
+  }
+}
+
+function animateWave(active) {
+  clearInterval(waveInterval);
+  const bars = document.querySelectorAll('.wave-bar');
+  if (active) {
+    waveInterval = setInterval(() => {
+      bars.forEach(b => { b.style.height = (4 + Math.random() * 32) + 'px'; });
+    }, 80);
+  } else {
+    bars.forEach(b => { b.style.height = '4px'; });
+  }
+}
+
+function getSampleAnswer() {
+  return "Based on my understanding, I would approach this by first analyzing the core requirements, then considering the trade-offs between different approaches. In my experience, the most effective solution balances performance with maintainability. I would implement this step by step, ensuring each component is well-tested.";
+}
+
+// ANSWER SUBMISSION & FEEDBACK
+function submitAnswer() {
+  clearInterval(timerInterval);
+  if (isRecording) toggleRecording();
+
+  let answer = '';
+  if (currentTab === 'structured') {
+    answer = [
+      document.getElementById('starS').value,
+      document.getElementById('starT').value,
+      document.getElementById('starA').value,
+      document.getElementById('starR').value
+    ].filter(Boolean).join(' ');
+  } else {
+    answer = document.getElementById('answerText').value;
+  }
+
+  if (!answer.trim()) {
+    showToast('⚠️', 'Please provide an answer before submitting!');
+    return;
+  }
+
+  // Generate AI-like scores based on answer length and content
+  const score = generateScore(answer);
+  sessionScores.push(score.overall);
+  showFeedback(score);
+}
+
+function generateScore(answer) {
+  const len = answer.trim().length;
+  const words = answer.trim().split(/\s+/).length;
+
+  // Simulate intelligent scoring
+  const baseScore = Math.min(95, 40 + words * 0.8 + Math.random() * 15);
+  const hasStructure = answer.includes('\n') || answer.includes('.') ? 8 : 0;
+  const hasExamples = (answer.toLowerCase().includes('example') || answer.toLowerCase().includes('for instance') || answer.toLowerCase().includes('such as')) ? 7 : 0;
+  const overall = Math.min(97, Math.max(45, Math.round(baseScore + hasStructure + hasExamples)));
+
+  return {
+    overall,
+    communication: Math.min(100, overall + Math.round((Math.random()-0.3)*15)),
+    technical: Math.min(100, overall + Math.round((Math.random()-0.3)*18)),
+    structure: Math.min(100, overall + hasStructure + Math.round((Math.random()-0.3)*12)),
+    confidence: Math.min(100, overall + Math.round((Math.random()-0.4)*20)),
+  };
+}
+
+function showFeedback(score) {
+  const panel = document.getElementById('feedbackPanel');
+  panel.classList.add('show');
+
+  // Animate ring
+  const offset = 251.3 * (1 - score.overall / 100);
+  document.getElementById('ringFill').style.strokeDashoffset = offset;
+  document.getElementById('ringText').textContent = score.overall + '%';
+
+  // Score breakdown
+  const breakdown = document.getElementById('scoreBreakdown');
+  const metrics = [
+    { label: '🗣️ Communication', val: score.communication, color: '#6c63ff' },
+    { label: '💻 Technical Accuracy', val: score.technical, color: '#00d4aa' },
+    { label: '📋 Answer Structure', val: score.structure, color: '#ffb347' },
+    { label: '💪 Confidence Level', val: score.confidence, color: '#ff6584' },
+  ];
+  breakdown.innerHTML = metrics.map(m => `
+    <div class="score-item">
+      <div class="si-label">${m.label}</div>
+      <div class="si-bar"><div class="si-fill" style="width:${m.val}%;background:${m.color}"></div></div>
+      <div class="si-val" style="color:${m.color}">${m.val}%</div>
+    </div>
+  `).join('');
+
+  // Summary
+  const grade = score.overall >= 90 ? 'Excellent' : score.overall >= 75 ? 'Good' : score.overall >= 60 ? 'Average' : 'Needs Work';
+  document.getElementById('ftab-summary').innerHTML = `
+    <div style="padding:16px;background:var(--bg3);border-radius:12px;margin-bottom:12px">
+      <div style="font-size:22px;font-weight:800;margin-bottom:4px">${grade} Response! ${score.overall >= 80 ? '🌟' : score.overall >= 65 ? '👍' : '📚'}</div>
+      <div style="color:var(--text-muted);font-size:14px;line-height:1.6">Your answer scored <strong style="color:var(--primary)">${score.overall}%</strong>. 
+      ${score.overall >= 80 ? 'Strong, structured response with good examples. Minor improvements can push this to 90%+.' : 
+        score.overall >= 65 ? 'Solid foundation but could use more specific examples and better structure.' :
+        'Focus on using the STAR method and including more concrete examples from your experience.'}</div>
+    </div>
+    <div style="font-size:13px;color:var(--text-muted);line-height:1.7">
+      <strong>Word count:</strong> ${document.getElementById('answerText').value.split(/\s+/).filter(Boolean).length} words 
+      (Ideal: 100-200 words for most questions)<br>
+      <strong>Time used:</strong> ${Math.round((120 - timerSeconds) / 60 * 100) / 100}m of 2m allowed
+    </div>
+  `;
+
+  // Strengths
+  const strengths = getStrengths(score);
+  document.getElementById('ftab-strengths').innerHTML = strengths.map(s => `
+    <div class="fb-point good">
+      <span class="fb-icon">✅</span>
+      <div class="fb-text"><strong>${s.title}</strong>${s.desc}</div>
+    </div>
+  `).join('');
+
+  // Improvements
+  const improvements = getImprovements(score);
+  document.getElementById('ftab-improve').innerHTML = improvements.map(i => `
+    <div class="fb-point ${i.sev}">
+      <span class="fb-icon">${i.icon}</span>
+      <div class="fb-text"><strong>${i.title}</strong>${i.desc}</div>
+    </div>
+  `).join('');
+
+  // Model answer
+  const q = currentQuestions[currentQIndex];
+  document.getElementById('ftab-model').innerHTML = `
+    <div class="model-answer-box">
+      <h4>⭐ Model Answer</h4>
+      <p>${q.model}</p>
+    </div>
+    <div style="margin-top:14px;padding:12px;background:rgba(0,212,170,.08);border:1px solid rgba(0,212,170,.2);border-radius:10px;font-size:13px;color:var(--secondary)">
+      💡 Study this model answer and compare it with your response. What key points did you miss or phrase differently?
+    </div>
+  `;
+
+  panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function getStrengths(score) {
+  const strengths = [];
+  if (score.communication >= 70) strengths.push({ title: 'Clear Communication ', desc: 'Your answer was easy to follow and well-articulated.' });
+  if (score.technical >= 70) strengths.push({ title: 'Technical Knowledge ', desc: 'You demonstrated solid understanding of the core concepts.' });
+  if (score.structure >= 70) strengths.push({ title: 'Good Structure ', desc: 'Your response had a logical flow from start to finish.' });
+  if (score.confidence >= 70) strengths.push({ title: 'Confident Delivery ', desc: 'Your answer conveyed confidence and authority on the topic.' });
+  if (strengths.length === 0) strengths.push({ title: 'Attempted the Question ', desc: 'Good effort! Practice the model answer to improve significantly.' });
+  return strengths;
+}
+
+function getImprovements(score) {
+  const improvements = [];
+  if (score.structure < 75) improvements.push({ icon: '📋', sev: 'improve', title: 'Use the STAR/structured method ', desc: 'Organize your answer: Situation → Task → Action → Result for behavioral questions.' });
+  if (score.technical < 75) improvements.push({ icon: '💡', sev: 'improve', title: 'Add more technical specifics ', desc: 'Include data structures, algorithms, or specific technologies when relevant.' });
+  if (score.communication < 75) improvements.push({ icon: '🗣️', sev: 'bad', title: 'Improve conciseness ', desc: 'Avoid filler phrases. Every sentence should add value to your answer.' });
+  improvements.push({ icon: '📊', sev: 'improve', title: 'Quantify your results ', desc: 'Add numbers: "improved performance by 30%", "reduced bugs by 50%", "saved 2 hours per week".' });
+  return improvements;
+}
+
+function skipQuestion() {
+  sessionScores.push(0);
+  showToast('⏭️', 'Question skipped. Remember, skipping in real interviews is best avoided!');
+  nextQuestion();
+}
+
+function retryQuestion() {
+  sessionScores.pop();
+  document.getElementById('feedbackPanel').classList.remove('show');
+  document.getElementById('answerText').value = '';
+  resetTimer();
+  showToast('🔄', 'Retrying! This time, use the STAR method for structure.');
+}
+
+function nextQuestion() {
+  currentQIndex++;
+  if (currentQIndex >= currentQuestions.length) {
+    endInterview();
+  } else {
+    loadQuestion();
+    document.getElementById('feedbackPanel').classList.remove('show');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+}
+
+function endInterview() {
+  clearInterval(timerInterval);
+  const avg = sessionScores.length > 0 ? Math.round(sessionScores.reduce((a,b) => a+b, 0) / sessionScores.length) : 0;
+  const timeTaken = Math.round((Date.now() - sessionStartTime) / 60000);
+
+  // Show results
+  document.getElementById('interviewSetup').style.display = 'block';
+  document.getElementById('interviewArena').style.display = 'none';
+
+  showResults(avg, timeTaken, sessionScores.filter(s => s > 0).length);
+}
+
+function showResults(avg, timeTaken, answered) {
+  showPage('results');
+
+  const grade = avg >= 90 ? '🌟 Outstanding!' : avg >= 80 ? '🎉 Excellent!' : avg >= 70 ? '👍 Great Job!' : avg >= 60 ? '📈 Good Progress!' : '📚 Keep Practicing!';
+  const sub = avg >= 80 ? 'You\'re interview-ready! Practice a few more rounds to stay sharp.' : avg >= 60 ? 'Good foundation. Focus on structure and specific examples.' : 'Review the model answers and practice daily for improvement.';
+  const emoji = avg >= 80 ? '🏆' : avg >= 60 ? '🎯' : '📚';
+
+  document.getElementById('resultEmoji').textContent = emoji;
+  document.getElementById('finalScore').textContent = avg;
+  document.getElementById('resultGrade').textContent = grade;
+  document.getElementById('resultSub').textContent = sub;
+  document.getElementById('r-correct').textContent = answered + '/' + currentQuestions.length;
+  document.getElementById('r-time').textContent = timeTaken + 'm';
+  document.getElementById('r-conf').textContent = Math.min(95, avg + 5) + '%';
+
+  // Breakdown
+  document.getElementById('resultBreakdown').innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:10px">
+      ${[['Communication', avg + Math.round((Math.random()-.3)*10), '#6c63ff'],
+         ['Technical', avg + Math.round((Math.random()-.3)*15), '#00d4aa'],
+         ['Structure', avg + Math.round((Math.random()-.3)*12), '#ffb347'],
+         ['Confidence', Math.min(95, avg+8), '#ff6584']].map(([n,v,c]) => `
+        <div><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:13px">${n}</span><span style="font-weight:700;color:${c}">${Math.min(98,Math.max(30,v))}%</span></div>
+        <div style="height:8px;background:var(--bg3);border-radius:10px;overflow:hidden"><div style="height:100%;width:${Math.min(98,Math.max(30,v))}%;background:${c};border-radius:10px"></div></div></div>
+      `).join('')}
+    </div>
+  `;
+
+  // Tips
+  const tips = avg >= 80 ?
+    ['Practice harder difficulty questions', 'Try FAANG-level questions', 'Focus on System Design', 'Work on optimization problems'] :
+    ['Use STAR method for all behavioral answers', 'Add more specific examples with numbers', 'Practice Think Out Loud technique', 'Review model answers carefully'];
+  document.getElementById('resultTips').innerHTML = tips.map(t => `
+    <div style="display:flex;gap:10px;padding:10px;border-radius:8px;background:var(--bg3);margin-bottom:8px;font-size:13px">
+      <span>→</span><span>${t}</span>
+    </div>
+  `).join('');
+
+  showToast('🎉', `Interview complete! Your score: ${avg}%. Great work!`);
+}
+
+// ════════════════════════════════════════
+// CHAT
+// ════════════════════════════════════════
+function sendChat() {
+  const input = document.getElementById('chatInput');
+  const msg = input.value.trim();
+  if (!msg) return;
+  input.value = '';
+  addMessage(msg, 'user');
+  showTyping();
+  setTimeout(() => {
+    removeTyping();
+    const response = generateAIResponse(msg);
+    addMessage(response, 'ai');
+  }, 800 + Math.random() * 1200);
+}
+
+function quickChat(msg) {
+  showPage('chat');
+  setTimeout(() => {
+    document.getElementById('chatInput').value = msg;
+    sendChat();
+  }, 300);
+}
+
+function generateAIResponse(msg) {
+  const lower = msg.toLowerCase();
+  if (lower.includes('tell me about yourself') || lower.includes('about yourself')) return AI_RESPONSES['tell me about yourself'];
+  if (lower.includes('mistake') || lower.includes('common')) return AI_RESPONSES['common technical interview mistakes'];
+  if (lower.includes('salary') || lower.includes('negotiat')) return AI_RESPONSES['salary negotiation'];
+  if (lower.includes('star') || lower.includes('leadership')) return AI_RESPONSES['star method'];
+  if (lower.includes('question') && lower.includes('ask')) return AI_RESPONSES['questions to ask'];
+  if (lower.includes('don\'t know') || lower.includes('dont know') || lower.includes('unknown') || lower.includes("don't know")) return AI_RESPONSES['unknown questions'];
+  if (lower.includes('system design') || lower.includes('design')) return AI_RESPONSES['system design'];
+  if (lower.includes('behavioral') || lower.includes('behaviour')) return AI_RESPONSES['behavioral'];
+  if (lower.includes('coding') || lower.includes('technical') || lower.includes('top 5') || lower.includes('pattern')) return AI_RESPONSES['common technical interview mistakes'];
+  if (lower.includes('tip') || lower.includes('advice') || lower.includes('prepare')) {
+    return `Here are my top **interview preparation tips**:
+
+🎯 **3 Weeks Before:**
+- Research the company thoroughly
+- Practice 2 mock interviews per day
+- Review your resume stories
+
+📚 **1 Week Before:**
+- Focus on weak areas from mock interviews
+- Practice out loud (not just in your head)
+- Prepare 10 questions to ask
+
+🌟 **Day Before:**
+- Light review, no cramming
+- Prepare your outfit and route
+- Sleep 8 hours — seriously!
+
+🚀 **Day Of:**
+- Arrive 15 minutes early
+- Do a power pose before entering
+- Remember: they want you to succeed!
+
+What specific aspect would you like to dive deeper into? 🎯`;
+  }
+  return `Great question! Here's what I can tell you:
+
+**Key Points to Remember:**
+📌 Always prepare with **specific examples** from your experience
+📌 Use the **STAR method** to structure behavioral answers
+📌 Show your **thought process**, not just the answer
+📌 **Research** the company before every interview
+
+For your specific question about "${msg.slice(0,50)}...", I recommend:
+
+1. **Practice** this scenario out loud 5+ times
+2. **Time yourself** — aim for 1.5-2 minutes per answer
+3. **Get feedback** by recording yourself answering
+4. **Review** the STAR method for structuring your response
+
+Would you like me to:
+- 🎭 Roleplay a mock question on this topic?
+- 📚 Explain a specific concept in depth?
+- 💡 Give you practice questions to try?
+
+Just ask and I'll help! 🎯`;
+}
+
+function addMessage(text, role) {
+  const msgs = document.getElementById('chatMessages');
+  const now = new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+  const div = document.createElement('div');
+  div.className = `message ${role}`;
+  // Convert markdown-like to HTML
+  const html = text
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\n/g, '<br>');
+  div.innerHTML = `
+    <div class="msg-avatar ${role}">${role === 'ai' ? '🤖' : 'JD'}</div>
+    <div>
+      <div class="msg-bubble">${html}</div>
+      <div class="msg-time">${now}</div>
+    </div>
+  `;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function showTyping() {
+  const msgs = document.getElementById('chatMessages');
+  const div = document.createElement('div');
+  div.className = 'message ai';
+  div.id = 'typingMsg';
+  div.innerHTML = `
+    <div class="msg-avatar ai">🤖</div>
+    <div>
+      <div class="msg-bubble">
+        <div class="typing-indicator">
+          <div class="typing-dot"></div>
+          <div class="typing-dot"></div>
+          <div class="typing-dot"></div>
+        </div>
+      </div>
+    </div>
+  `;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function removeTyping() {
+  const t = document.getElementById('typingMsg');
+  if (t) t.remove();
+}
+
+function clearChat() {
+  document.getElementById('chatMessages').innerHTML = '';
+  addMessage('Chat cleared! How can I help you prepare for your interview today? 🎯', 'ai');
+}
+
+function switchFtab(el, id) {
+  document.querySelectorAll('.ftab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.ftab-content').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('ftab-' + id).classList.add('active');
+}
+
+// ════════════════════════════════════════
+// TIPS
+// ════════════════════════════════════════
+let currentFilter = 'all';
+
+function initTips() {
+  renderTips(TIPS_DATA);
+}
+
+function filterTips(el, cat) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  currentFilter = cat;
+  const filtered = cat === 'all' ? TIPS_DATA : TIPS_DATA.filter(t => t.cat === cat);
+  renderTips(filtered);
+}
+
+function renderTips(data) {
+  const grid = document.getElementById('tipsGrid');
+  grid.innerHTML = data.map((tip, i) => `
+    <div class="tip-card">
+      <div class="tip-card-header">
+        <div class="tip-icon ${tip.iconClass}">${tip.icon}</div>
+        <div>
+          <div class="tip-title">${tip.title}</div>
+          <div class="tip-cat">${tip.catLabel}</div>
+        </div>
+      </div>
+      <div class="tip-body">${tip.body}</div>
+      <div class="tip-expand">
+        <button class="btn btn-outline btn-sm" onclick="toggleTipDetail(${i})">Read More ↓</button>
+      </div>
+      <div class="tip-detail" id="tipdetail-${i}">
+        <ul class="tip-points">
+          ${tip.points.map(p => `<li>${p}</li>`).join('')}
+        </ul>
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleTipDetail(i) {
+  const el = document.getElementById('tipdetail-' + i);
+  el.classList.toggle('show');
+}
+
+// ════════════════════════════════════════
+// PROGRESS
+// ════════════════════════════════════════
+function initProgress() {
+  // Heatmap
+  const hm = document.getElementById('heatmap');
+  if (hm && !hm.dataset.init) {
+    hm.dataset.init = '1';
+    hm.innerHTML = '';
+    const levels = [0,1,2,0,3,4,2,1,0,2,3,1,4,2,0,1,3,4,2,1,0,3,2,4,1,0,2,3,1,4,2,0,1,2,3,0,4,2,1,3,0,2,1,4,3,2,1,0,3];
+    levels.forEach(l => {
+      const cell = document.createElement('div');
+      cell.className = `heat-cell l${l}`;
+      hm.appendChild(cell);
+    });
+  }
+  // Radar chart
+  drawRadar();
+}
+
+function drawRadar() {
+  const canvas = document.getElementById('radarChart');
+  if (!canvas || canvas.dataset.drawn) return;
+  canvas.dataset.drawn = '1';
+  const ctx = canvas.getContext('2d');
+  const cx = 150, cy = 150, r = 110;
+  const labels = ['DSA', 'System Design', 'Communication', 'HR/Behavioral', 'Speed', 'STAR Method'];
+  const values = [0.82, 0.65, 0.88, 0.79, 0.71, 0.84];
+  const n = labels.length;
+
+  ctx.clearRect(0,0,300,300);
+
+  // Draw grid
+  for (let ring = 1; ring <= 5; ring++) {
+    ctx.beginPath();
+    for (let i = 0; i < n; i++) {
+      const angle = (i * 2 * Math.PI / n) - Math.PI/2;
+      const rr = r * ring / 5;
+      const x = cx + rr * Math.cos(angle);
+      const y = cy + rr * Math.sin(angle);
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.strokeStyle = 'rgba(108,99,255,0.15)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+
+  // Draw axes
+  for (let i = 0; i < n; i++) {
+    const angle = (i * 2 * Math.PI / n) - Math.PI/2;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(cx + r * Math.cos(angle), cy + r * Math.sin(angle));
+    ctx.strokeStyle = 'rgba(108,99,255,0.2)';
+    ctx.stroke();
+  }
+
+  // Draw data
+  ctx.beginPath();
+  values.forEach((v, i) => {
+    const angle = (i * 2 * Math.PI / n) - Math.PI/2;
+    const x = cx + r * v * Math.cos(angle);
+    const y = cy + r * v * Math.sin(angle);
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  });
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(108,99,255,0.2)';
+  ctx.fill();
+  ctx.strokeStyle = '#6c63ff';
+  ctx.lineWidth = 2.5;
+  ctx.stroke();
+
+  // Dots
+  values.forEach((v, i) => {
+    const angle = (i * 2 * Math.PI / n) - Math.PI/2;
+    const x = cx + r * v * Math.cos(angle);
+    const y = cy + r * v * Math.sin(angle);
+    ctx.beginPath();
+    ctx.arc(x, y, 5, 0, 2 * Math.PI);
+    ctx.fillStyle = '#00d4aa';
+    ctx.fill();
+  });
+
+  // Labels
+  ctx.font = '12px Segoe UI';
+  ctx.fillStyle = '#8888aa';
+  ctx.textAlign = 'center';
+  labels.forEach((label, i) => {
+    const angle = (i * 2 * Math.PI / n) - Math.PI/2;
+    const x = cx + (r + 22) * Math.cos(angle);
+    const y = cy + (r + 22) * Math.sin(angle) + 4;
+    ctx.fillText(label, x, y);
+  });
+}
+
+// ════════════════════════════════════════
+// LEADERBOARD
+// ════════════════════════════════════════
+function initLeaderboard() {
+  const list = document.getElementById('leaderboardList');
+  if (!list || list.dataset.init) return;
+  list.dataset.init = '1';
+  list.innerHTML = LEADERBOARD_DATA.map(p => {
+    const rankClass = p.rank === 1 ? 'gold' : p.rank === 2 ? 'silver' : p.rank === 3 ? 'bronze' : '';
+    const rankDisplay = p.rank === 'YOU' ? '★' : '#' + p.rank;
+    return `
+      <div class="lb-item ${p.isYou ? 'you' : ''}">
+        <div class="lb-rank ${rankClass}">${rankDisplay}</div>
+        <div class="lb-avatar" style="background:linear-gradient(135deg,${p.color},#00d4aa)">${p.emoji}</div>
+        <div class="lb-name">${p.name}${p.isYou ? ' <span style="color:var(--secondary);font-size:11px">(You)</span>' : ''}</div>
+        <div class="lb-score">${p.score.toLocaleString()} XP</div>
+        ${p.badge ? `<div class="lb-badge">${p.badge}</div>` : ''}
+      </div>
+    `;
+  }).join('');
+}
+
+// ════════════════════════════════════════
+// ACHIEVEMENTS
+// ════════════════════════════════════════
+function initAchievements() {
+  const grid = document.getElementById('achievementsGrid');
+  if (!grid || grid.dataset.init) return;
+  grid.dataset.init = '1';
+  grid.innerHTML = ACHIEVEMENTS_DATA.map(a => `
+    <div class="achievement-card ${a.unlocked ? '' : 'locked'}" onclick="showAchToast('${a.name}', ${a.unlocked})">
+      <div class="ach-icon">${a.icon}</div>
+      <div class="ach-name">${a.name}</div>
+      <div class="ach-desc">${a.desc}</div>
+      ${a.unlocked ? `<div class="ach-unlock">${a.date}</div>` : ''}
+    </div>
+  `).join('');
+}
+
+function showAchToast(name, unlocked) {
+  if (unlocked) showToast('🎖️', `Achievement: "${name}" – Unlocked!`);
+  else showToast('🔒', `"${name}" – Keep practicing to unlock this!`);
+}
+
+// ════════════════════════════════════════
+// MODAL / SETTINGS
+// ════════════════════════════════════════
+function openSettings() { document.getElementById('settingsModal').classList.add('show'); }
+function closeSettings() { document.getElementById('settingsModal').classList.remove('show'); }
+function saveSettings() {
+  closeSettings();
+  showToast('✅', 'Settings saved successfully!');
+}
+
+// ════════════════════════════════════════
+// TOAST
+// ════════════════════════════════════════
+let toastTimeout = null;
+function showToast(icon, msg) {
+  const toast = document.getElementById('toast');
+  document.getElementById('toastIcon').textContent = icon;
+  document.getElementById('toastMsg').textContent = msg;
+  toast.classList.add('show');
+  clearTimeout(toastTimeout);
+  toastTimeout = setTimeout(() => toast.classList.remove('show'), 4000);
+}
+
+// ════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  initTips();
+  initAchievements();
+  // Animate confidence ring
+  const confRing = document.getElementById('confRing');
+  if (confRing) {
+    const circumference = 2 * Math.PI * 44; // 276.5
+    confRing.style.strokeDashoffset = circumference * 0.18; // 82% filled
+  }
+  // Greeting
+  const hour = new Date().getHours();
+  const greetings = document.querySelectorAll('.hero-greeting');
+  const timeGreet = hour < 12 ? '🌅 Good Morning' : hour < 17 ? '☀️ Good Afternoon' : '🌙 Good Evening';
+  greetings.forEach(g => { if (g.textContent.includes('👋')) g.textContent = `${timeGreet}, John!`; });
+
+  showToast('🎯', 'Welcome back, John! You\'re on a 7-day streak. Keep it up!');
+});
+</script>
+</body>
+</html>
